@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="LevelDB源码分析Intro我们从LevelDB给定的示例入手对LevelDB的源代码进行分析，本篇仅分析其中的Open函数，该函数用于打开一个数据库。 123456789leveldb::DB* db;  leveldb::Options options;  options.create_if_missing = true;  leveldb::Status status = leveldb">
+<meta name="keywords" content="LevelDB,CPP,Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LevelDB_Open">
+<meta property="og:url" content="https://linkwk7.github.io/2018/09/24/LevelDB-Open/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="LevelDB源码分析Intro我们从LevelDB给定的示例入手对LevelDB的源代码进行分析，本篇仅分析其中的Open函数，该函数用于打开一个数据库。 123456789leveldb::DB* db;  leveldb::Options options;  options.create_if_missing = true;  leveldb::Status status = leveldb">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-09-24T14:07:26.063Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LevelDB_Open">
+<meta name="twitter:description" content="LevelDB源码分析Intro我们从LevelDB给定的示例入手对LevelDB的源代码进行分析，本篇仅分析其中的Open函数，该函数用于打开一个数据库。 123456789leveldb::DB* db;  leveldb::Options options;  options.create_if_missing = true;  leveldb::Status status = leveldb">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/09/24/LevelDB-Open/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>LevelDB_Open | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/09/24/LevelDB-Open/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">LevelDB_Open
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-24 11:44:37 / Modified: 22:07:26" itemprop="dateCreated datePublished" datetime="2018-09-24T11:44:37+08:00">2018-09-24</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/LevelDB/" itemprop="url" rel="index"><span itemprop="name">LevelDB</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="LevelDB源码分析"><a href="#LevelDB源码分析" class="headerlink" title="LevelDB源码分析"></a>LevelDB源码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>我们从LevelDB给定的示例入手对LevelDB的源代码进行分析，本篇仅分析其中的Open函数，该函数用于打开一个<br>数据库。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">leveldb::DB* db;  </span><br><span class="line">leveldb::Options options;  </span><br><span class="line">options.create_if_missing = <span class="literal">true</span>;  </span><br><span class="line">leveldb::Status status = leveldb::DB::Open(options, <span class="string">"/tmp/testdb"</span>, &amp;db);  </span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> value;  </span><br><span class="line">leveldb::Status s = db-&gt;Get(leveldb::ReadOptions(), key1, &amp;value);  </span><br><span class="line"><span class="keyword">if</span> (s.ok()) s = db-&gt;Put(leveldb::WriteOptions(), key2, value);  </span><br><span class="line"><span class="keyword">if</span> (s.ok()) s = db-&gt;Delete(leveldb::WriteOptions(), key1);  </span><br><span class="line"><span class="keyword">delete</span> db;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h2 id="Open"><a href="#Open" class="headerlink" title="Open"></a>Open</h2><p>Open函数为DB类的一个静态函数。该函数负责打开一个数据库，由于DB仅为一个接口，其中定义了LevelDB所提供的<br>接口，而实际的数据库实现放在了DBImpl类中，DBImpl由DB类继承而来。</p>
+<p>首先需要介绍一下LevelDB的构成，LevelDB当前的状态由一个Version构成，每个Version都追踪着一系列用于<br>构成数据库的文件，这些Version共同构成VersionSet，当某些文件被添加或者删除时就会触发Version之间的变换，<br>Version之间的变换可以使用VersionEdit来记录不同Version之间的文件或其他元信息的差异。</p>
+<p>接下来逐行分析Open这个函数。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">Status DB::Open(<span class="keyword">const</span> Options&amp; options, <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span>&amp; dbname, DB** dbptr) &#123;</span><br><span class="line">    *dbptr = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 构建新的DBImpl对象</span></span><br><span class="line">    DBImpl* impl = <span class="keyword">new</span> DBImpl(options, dbname);</span><br><span class="line">    impl-&gt;mutex_.Lock();</span><br><span class="line">    <span class="comment">// VersionEdit用来记录LevelDB中Version之间的修改，包括Version之间有哪些</span></span><br><span class="line">    <span class="comment">// 文件被添加/删除，当前Version的日志文件编号是多少等</span></span><br><span class="line">    VersionEdit edit;</span><br><span class="line">    <span class="comment">// save_manifest用于记录是否需要更新MANIFEST文件</span></span><br><span class="line">    <span class="keyword">bool</span> save_manifest = <span class="literal">false</span>;</span><br><span class="line">    <span class="comment">// LevelDB从已有的文件中恢复信息</span></span><br><span class="line">    Status s = impl-&gt;Recover(&amp;edit, &amp;save_manifest);</span><br><span class="line">    <span class="comment">// 如果LevelDB的信息恢复成功并且此时没有正在使用的日志文件，则创建日志文件和对应</span></span><br><span class="line">    <span class="comment">// 的MemTable，其中MemTable使用引用计数来进行管理，该类会在之后进行介绍</span></span><br><span class="line">    <span class="keyword">if</span> (s.ok() &amp;&amp; impl-&gt;mem_ == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="keyword">uint64_t</span> new_log_number = impl-&gt;versions_-&gt;NewFileNumber();</span><br><span class="line">        WritableFile* lfile;</span><br><span class="line">        s = options.env-&gt;NewWritableFile(LogFileName(dbname, new_log_number),</span><br><span class="line">                                    &amp;lfile);</span><br><span class="line">        <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">            edit.SetLogNumber(new_log_number);</span><br><span class="line">            impl-&gt;logfile_ = lfile;</span><br><span class="line">            impl-&gt;logfile_number_ = new_log_number;</span><br><span class="line">            impl-&gt;log_ = <span class="keyword">new</span> <span class="built_in">log</span>::Writer(lfile);</span><br><span class="line">            impl-&gt;mem_ = <span class="keyword">new</span> MemTable(impl-&gt;internal_comparator_);</span><br><span class="line">            impl-&gt;mem_-&gt;Ref();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果Version信息发生了变动，则利用VersionEdit将Version之间的变动应用到Version</span></span><br><span class="line">    <span class="comment">// 使用LogAndApply会生成新的Version，并将该Version加入VersionSet中</span></span><br><span class="line">    <span class="keyword">if</span> (s.ok() &amp;&amp; save_manifest) &#123;</span><br><span class="line">        edit.SetPrevLogNumber(<span class="number">0</span>);  <span class="comment">// No older logs needed after recovery.</span></span><br><span class="line">        edit.SetLogNumber(impl-&gt;logfile_number_);</span><br><span class="line">        s = impl-&gt;versions_-&gt;LogAndApply(&amp;edit, &amp;impl-&gt;mutex_);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        <span class="comment">// 删除无用的文件，该函数会在之后的博客中介绍</span></span><br><span class="line">        impl-&gt;DeleteObsoleteFiles();</span><br><span class="line">        <span class="comment">// 进行Merge</span></span><br><span class="line">        impl-&gt;MaybeScheduleCompaction();</span><br><span class="line">    &#125;</span><br><span class="line">    impl-&gt;mutex_.Unlock();</span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        assert(impl-&gt;mem_ != <span class="literal">nullptr</span>);</span><br><span class="line">        *dbptr = impl;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">delete</span> impl;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-Recover"><a href="#DBImpl-Recover" class="headerlink" title="DBImpl::Recover"></a>DBImpl::Recover</h3><p>从已有的文件中恢复数据库的信息</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::Recover(VersionEdit* edit, <span class="keyword">bool</span> *save_manifest) &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 该数据库对应的文件夹，如果该数据库已经存在则文件夹创建失败</span></span><br><span class="line">    env_-&gt;CreateDir(dbname_);</span><br><span class="line">    assert(db_lock_ == <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="comment">// 使用文件锁防止多个进程对同一个数据库的并发访问</span></span><br><span class="line">    Status s = env_-&gt;LockFile(LockFileName(dbname_), &amp;db_lock_);</span><br><span class="line">    <span class="keyword">if</span> (!s.ok()) &#123;</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据是否存在CURRENT文件判断是否已经存在数据库，如果不存在调用NewDB创建</span></span><br><span class="line">    <span class="comment">// 新的数据库，该函数会在之后介绍</span></span><br><span class="line">    <span class="keyword">if</span> (!env_-&gt;FileExists(CurrentFileName(dbname_))) &#123;</span><br><span class="line">        <span class="keyword">if</span> (options_.create_if_missing) &#123;</span><br><span class="line">            s = NewDB();</span><br><span class="line">            <span class="keyword">if</span> (!s.ok()) &#123;</span><br><span class="line">                <span class="keyword">return</span> s;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> Status::InvalidArgument(</span><br><span class="line">                dbname_, <span class="string">"does not exist (create_if_missing is false)"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (options_.error_if_exists) &#123;</span><br><span class="line">            <span class="keyword">return</span> Status::InvalidArgument(</span><br><span class="line">                dbname_, <span class="string">"exists (error_if_exists is true)"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 从已有文件中恢复VersionSet的信息，该函数会在之后介绍VersionSet时介绍</span></span><br><span class="line">    s = versions_-&gt;Recover(save_manifest);</span><br><span class="line">    <span class="keyword">if</span> (!s.ok()) &#123;</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function">SequenceNumber <span class="title">max_sequence</span><span class="params">(<span class="number">0</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 由于部分操作可能已经记录进日志文件，但这些日志文件所记录的更改可能并未出现在各个Level中</span></span><br><span class="line">    <span class="comment">// 从VersionSet中获取当前所有Version的所有Level中包含的文件。再从当前文件夹中</span></span><br><span class="line">    <span class="comment">// 获取所有的日志文件。</span></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="built_in">std</span>::sort(logs.begin(), logs.end());</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; logs.size(); i++) &#123;</span><br><span class="line">        <span class="comment">// 从日志文件中恢复信息，该函数会在之后介绍</span></span><br><span class="line">        s = RecoverLogFile(logs[i], (i == logs.size() - <span class="number">1</span>), save_manifest, edit,</span><br><span class="line">                &amp;max_sequence);</span><br><span class="line">        <span class="keyword">if</span> (!s.ok()) &#123;</span><br><span class="line">            <span class="keyword">return</span> s;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 将这个日志文件的编号标记为已用</span></span><br><span class="line">        versions_-&gt;MarkFileNumberUsed(logs[i]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (versions_-&gt;LastSequence() &lt; max_sequence) &#123;</span><br><span class="line">        versions_-&gt;SetLastSequence(max_sequence);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Status::OK();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="NewDB"><a href="#NewDB" class="headerlink" title="NewDB()"></a>NewDB()</h4><p>创建新的数据库</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::NewDB() &#123;</span><br><span class="line">    <span class="comment">// 编号为1的为MANIFEST文件，0为当前的日志文件</span></span><br><span class="line">    <span class="comment">// 将当前的信息编码后写入MANIFEST文件，并设置CURRENT文件指向该</span></span><br><span class="line">    <span class="comment">// MANIFEST文件</span></span><br><span class="line">    VersionEdit new_db;</span><br><span class="line">    new_db.SetComparatorName(user_comparator()-&gt;Name());</span><br><span class="line">    new_db.SetLogNumber(<span class="number">0</span>);</span><br><span class="line">    new_db.SetNextFile(<span class="number">2</span>);</span><br><span class="line">    new_db.SetLastSequence(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="built_in">std</span>::<span class="built_in">string</span> manifest = DescriptorFileName(dbname_, <span class="number">1</span>);</span><br><span class="line">    WritableFile* file;</span><br><span class="line">    Status s = env_-&gt;NewWritableFile(manifest, &amp;file);</span><br><span class="line">    <span class="keyword">if</span> (!s.ok()) &#123;</span><br><span class="line">        <span class="keyword">return</span> s;</span><br><span class="line">    &#125;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">log</span>::<span class="function">Writer <span class="title">log</span><span class="params">(file)</span></span>;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">string</span> record;</span><br><span class="line">        new_db.EncodeTo(&amp;record);</span><br><span class="line">        s = <span class="built_in">log</span>.AddRecord(record);</span><br><span class="line">        <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">            s = file-&gt;Close();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">delete</span> file;</span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        s = SetCurrentFile(env_, dbname_, <span class="number">1</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        env_-&gt;DeleteFile(manifest);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="DBImpl-RecoverLogFile"><a href="#DBImpl-RecoverLogFile" class="headerlink" title="DBImpl::RecoverLogFile"></a>DBImpl::RecoverLogFile</h4><p>由日志文件中恢复未被写入各个Level文件的更新。save_manifest用来标识是否有新的文件被加入各个Level，<br>如果有的话则需要更新当前Version，进而需要更新MANIFEST文件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::RecoverLogFile(<span class="keyword">uint64_t</span> log_number, <span class="keyword">bool</span> last_log,</span><br><span class="line">                            <span class="keyword">bool</span>* save_manifest, VersionEdit* edit,</span><br><span class="line">                            SequenceNumber* max_sequence) &#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">LogReporter</span> :</span> <span class="keyword">public</span> <span class="built_in">log</span>::Reader::Reporter &#123;</span><br><span class="line">        Env* env;</span><br><span class="line">        Logger* info_log;</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">char</span>* fname;</span><br><span class="line">        Status* status;</span><br><span class="line">        <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">Corruption</span><span class="params">(<span class="keyword">size_t</span> bytes, <span class="keyword">const</span> Status&amp; s)</span> </span>&#123;</span><br><span class="line">            Log(info_log, <span class="string">"%s%s: dropping %d bytes; %s"</span>,</span><br><span class="line">                (<span class="keyword">this</span>-&gt;status == <span class="literal">nullptr</span> ? <span class="string">"(ignoring error) "</span> : <span class="string">""</span>),</span><br><span class="line">                fname, <span class="keyword">static_cast</span>&lt;<span class="keyword">int</span>&gt;(bytes), s.ToString().c_str());</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>-&gt;status != <span class="literal">nullptr</span> &amp;&amp; <span class="keyword">this</span>-&gt;status-&gt;ok()) *<span class="keyword">this</span>-&gt;status = s;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 打开log_number对应的日志文件</span></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建对应的Log Reader的Reporter</span></span><br><span class="line">    LogReporter reporter;</span><br><span class="line">    reporter.env = env_;</span><br><span class="line">    reporter.info_log = options_.info_log;</span><br><span class="line">    reporter.fname = fname.c_str();</span><br><span class="line">    reporter.status = (options_.paranoid_checks ? &amp;status : <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="built_in">log</span>::<span class="function">Reader <span class="title">reader</span><span class="params">(file, &amp;reporter, <span class="literal">true</span>, <span class="number">0</span>)</span></span>;</span><br><span class="line">    Log(options_.info_log, <span class="string">"Recovering log #%llu"</span>,</span><br><span class="line">        (<span class="keyword">unsigned</span> <span class="keyword">long</span> <span class="keyword">long</span>) log_number);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 利用Log Reader从日志中读取记录并添加入MemTable中</span></span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> scratch;</span><br><span class="line">    Slice record;</span><br><span class="line">    WriteBatch batch;</span><br><span class="line">    <span class="keyword">int</span> compactions = <span class="number">0</span>;</span><br><span class="line">    MemTable* mem = <span class="literal">nullptr</span>;</span><br><span class="line">    <span class="keyword">while</span> (reader.ReadRecord(&amp;record, &amp;scratch) &amp;&amp; status.ok()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (record.size() &lt; <span class="number">12</span>) &#123;</span><br><span class="line">            reporter.Corruption(</span><br><span class="line">                record.size(), Status::Corruption(<span class="string">"log record too small"</span>));</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        WriteBatchInternal::SetContents(&amp;batch, record);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mem == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            mem = <span class="keyword">new</span> MemTable(internal_comparator_);</span><br><span class="line">            mem-&gt;Ref();</span><br><span class="line">        &#125;</span><br><span class="line">        status = WriteBatchInternal::InsertInto(&amp;batch, mem);</span><br><span class="line">        MaybeIgnoreError(&amp;status);</span><br><span class="line">        <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 更新写入时的SequenceNumber</span></span><br><span class="line">        <span class="keyword">const</span> SequenceNumber last_seq =</span><br><span class="line">            WriteBatchInternal::Sequence(&amp;batch) +</span><br><span class="line">            WriteBatchInternal::Count(&amp;batch) - <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (last_seq &gt; *max_sequence) &#123;</span><br><span class="line">            *max_sequence = last_seq;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果MemTable的大小过大，将该MemTable生成Level0的Table</span></span><br><span class="line">        <span class="keyword">if</span> (mem-&gt;ApproximateMemoryUsage() &gt; options_.write_buffer_size) &#123;</span><br><span class="line">            compactions++;</span><br><span class="line">            *save_manifest = <span class="literal">true</span>;</span><br><span class="line">            status = WriteLevel0Table(mem, edit, <span class="literal">nullptr</span>);</span><br><span class="line">            mem-&gt;Unref();</span><br><span class="line">            mem = <span class="literal">nullptr</span>;</span><br><span class="line">            <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">delete</span> file;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可能重复使用最后的日志文件</span></span><br><span class="line">    <span class="keyword">if</span> (status.ok() &amp;&amp; options_.reuse_logs &amp;&amp; last_log &amp;&amp; compactions == <span class="number">0</span>) &#123;</span><br><span class="line">        assert(logfile_ == <span class="literal">nullptr</span>);</span><br><span class="line">        assert(log_ == <span class="literal">nullptr</span>);</span><br><span class="line">        assert(mem_ == <span class="literal">nullptr</span>);</span><br><span class="line">        <span class="keyword">uint64_t</span> lfile_size;</span><br><span class="line">        <span class="keyword">if</span> (env_-&gt;GetFileSize(fname, &amp;lfile_size).ok() &amp;&amp;</span><br><span class="line">            env_-&gt;NewAppendableFile(fname, &amp;logfile_).ok()) &#123;</span><br><span class="line">            Log(options_.info_log, <span class="string">"Reusing old log %s \n"</span>, fname.c_str());</span><br><span class="line">            log_ = <span class="keyword">new</span> <span class="built_in">log</span>::Writer(logfile_, lfile_size);</span><br><span class="line">            logfile_number_ = log_number;</span><br><span class="line">            <span class="keyword">if</span> (mem != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">                mem_ = mem;</span><br><span class="line">                mem = <span class="literal">nullptr</span>;</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                mem_ = <span class="keyword">new</span> MemTable(internal_comparator_);</span><br><span class="line">                mem_-&gt;Ref();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mem != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="comment">// 将未写入Level0的Table的日志全部写入Level0的Table中</span></span><br><span class="line">        <span class="keyword">if</span> (status.ok()) &#123;</span><br><span class="line">            *save_manifest = <span class="literal">true</span>;</span><br><span class="line">            status = WriteLevel0Table(mem, edit, <span class="literal">nullptr</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        mem-&gt;Unref();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="VersionEdit"><a href="#VersionEdit" class="headerlink" title="VersionEdit"></a>VersionEdit</h2><p>VersionEdit用以修改当前Version的信息，包括文件编号、日志编号、新增/删除的文件等，该类提供了EncodeTo<br>和DecodeFrom来与string进行相互转换。以下是VersionEdit提供的接口</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">VersionEdit</span> &#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    VersionEdit();</span><br><span class="line">    ~VersionEdit();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">Clear</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetComparatorName</span><span class="params">(<span class="keyword">const</span> Slice&amp; name)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetLogNumber</span><span class="params">(<span class="keyword">uint64_t</span> num)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetPrevLogNumber</span><span class="params">(<span class="keyword">uint64_t</span> num)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetNextFile</span><span class="params">(<span class="keyword">uint64_t</span> num)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetLastSequence</span><span class="params">(SequenceNumber seq)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">SetCompactPointer</span><span class="params">(<span class="keyword">int</span> level, <span class="keyword">const</span> InternalKey&amp; key)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">AddFile</span><span class="params">(<span class="keyword">int</span> level, <span class="keyword">uint64_t</span> file,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">uint64_t</span> file_size,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">const</span> InternalKey&amp; smallest,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">const</span> InternalKey&amp; largest)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">DeleteFile</span><span class="params">(<span class="keyword">int</span> level, <span class="keyword">uint64_t</span> file)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">EncodeTo</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">string</span>* dst)</span> <span class="keyword">const</span></span>;</span><br><span class="line">    <span class="function">Status <span class="title">DecodeFrom</span><span class="params">(<span class="keyword">const</span> Slice&amp; src)</span></span>;</span><br><span class="line">    <span class="built_in">std</span>::<span class="function"><span class="built_in">string</span> <span class="title">DebugString</span><span class="params">()</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h2 id="Version"><a href="#Version" class="headerlink" title="Version"></a>Version</h2><p>Version用于记录当前数据库所拥有的各个Level的文件以及一些有关Compaction的信息。该类还提供<br>了接口用于在这些文件上进行查找。各个Version均使用引用计数来防止被过早的释放，当一个Version<br>被加入VersionSet时会增加引用计数，当VersionSet的PickCompaction以及CompactRange选择一个<br>Version作为输入时也会增加对应Version的引用计数，使用Builder来构建新的Version时也会增加相应的<br>引用计数。</p>
+<h2 id="VersionSet"><a href="#VersionSet" class="headerlink" title="VersionSet"></a>VersionSet</h2><p>VersionSet用于管理当前数据库不同的Version，所有Version被串成一个双向链表。不同Version<br>之间的变化可以通过VersionSet提供的LogAndApply来应用VersionEdit或者使用VersionSet内部<br>提供的Builder来一次进行多个VersionEdit的变更。</p>
+<p>接下来介绍一下DBImpl::Recover中使用的VersionSet::Recover函数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line">Status VersionSet::Recover(<span class="keyword">bool</span> *save_manifest) &#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">LogReporter</span> :</span> <span class="keyword">public</span> <span class="built_in">log</span>::Reader::Reporter &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 利用CURRENT文件读取当前的MANIFEST文件</span></span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> have_log_number = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">bool</span> have_prev_log_number = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">bool</span> have_next_file = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">bool</span> have_last_sequence = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">uint64_t</span> next_file = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">uint64_t</span> last_sequence = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">uint64_t</span> log_number = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">uint64_t</span> prev_log_number = <span class="number">0</span>;</span><br><span class="line">    <span class="function">Builder <span class="title">builder</span><span class="params">(<span class="keyword">this</span>, current_)</span></span>;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">while</span> (reader.ReadRecord(&amp;record, &amp;scratch) &amp;&amp; s.ok()) &#123;</span><br><span class="line">            VersionEdit edit;</span><br><span class="line">            s = edit.DecodeFrom(record);</span><br><span class="line">            <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">                <span class="comment">// 检测Comparator是否一致</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">                builder.Apply(&amp;edit);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (edit.has_log_number_) &#123;</span><br><span class="line">                log_number = edit.log_number_;</span><br><span class="line">                have_log_number = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (edit.has_prev_log_number_) &#123;</span><br><span class="line">                prev_log_number = edit.prev_log_number_;</span><br><span class="line">                have_prev_log_number = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (edit.has_next_file_number_) &#123;</span><br><span class="line">                next_file = edit.next_file_number_;</span><br><span class="line">                have_next_file = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (edit.has_last_sequence_) &#123;</span><br><span class="line">                last_sequence = edit.last_sequence_;</span><br><span class="line">                have_last_sequence = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">delete</span> file;</span><br><span class="line">    file = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!have_next_file) &#123;</span><br><span class="line">            s = Status::Corruption(<span class="string">"no meta-nextfile entry in descriptor"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!have_log_number) &#123;</span><br><span class="line">            s = Status::Corruption(<span class="string">"no meta-lognumber entry in descriptor"</span>);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!have_last_sequence) &#123;</span><br><span class="line">            s = Status::Corruption(<span class="string">"no last-sequence-number entry in descriptor"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!have_prev_log_number) &#123;</span><br><span class="line">            prev_log_number = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        MarkFileNumberUsed(prev_log_number);</span><br><span class="line">        MarkFileNumberUsed(log_number);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        <span class="comment">// 利用Builder来一次性应用所有MANIFEST文件中记录的Version变化情况</span></span><br><span class="line">        Version* v = <span class="keyword">new</span> Version(<span class="keyword">this</span>);</span><br><span class="line">        builder.SaveTo(v);</span><br><span class="line">        <span class="comment">// 将Version添加到VersionSet中</span></span><br><span class="line">        Finalize(v);</span><br><span class="line">        AppendVersion(v);</span><br><span class="line">        manifest_file_number_ = next_file;</span><br><span class="line">        next_file_number_ = next_file + <span class="number">1</span>;</span><br><span class="line">        last_sequence_ = last_sequence;</span><br><span class="line">        log_number_ = log_number;</span><br><span class="line">        prev_log_number_ = prev_log_number;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果旧的MANIFEST文件并不是太大可以复用旧的MANIFEST文件</span></span><br><span class="line">        <span class="keyword">if</span> (ReuseManifest(dscname, current)) &#123;</span><br><span class="line">            <span class="comment">// No need to save new manifest</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            *save_manifest = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Open函数的流程可以概括为如下步骤：</p>
+<ul>
+<li>构造DBImpl对象</li>
+<li>从已有文件中恢复信息<ul>
+<li>根据是否存在CURRENT文件判断是否是已有的数据库，若没有则创建新数据库</li>
+<li>从已有文件中恢复VersionSet信息<ul>
+<li>利用CURRENT找到当前MANIFEST文件</li>
+<li>从MANIFEST文件中获取所有VersionEdit的信息</li>
+<li>利用所有的VersionEdit信息来生成当前Version的信息</li>
+<li>找到所有日志文件</li>
+<li>从所有日志文件中读取所有记录，插入一个MemTable中，该MemTable大小超过定值后会写入Level0的Table中</li>
+<li>最后一个日志文件可能被复用，其对应的MemTable会作为当前数据库的MemTable</li>
+<li>MANIFEST文件可能也会复用，如果不复用则在第一次调用LogAndApply时会创建新的MANIFEST文件</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果没有可以复用的日志文件及MemTable，则创建新的日志文件及MemTable</li>
+<li>如果恢复过程中生成了新的文件，即生成了新的Level0的Table文件或者需要新的MANIFEST文件，则将VersionEdit记录至VersionSet中</li>
+<li>删除无用文件</li>
+<li>调度Compaction</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/LevelDB/" rel="tag"># LevelDB</a>
+          
+            <a href="/tags/CPP/" rel="tag"># CPP</a>
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/22/hello-world/" rel="next" title="Hello World">
+                <i class="fa fa-chevron-left"></i> Hello World
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#LevelDB源码分析"><span class="nav-number">1.</span> <span class="nav-text">LevelDB源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intro"><span class="nav-number">1.1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Open"><span class="nav-number">1.2.</span> <span class="nav-text">Open</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-Recover"><span class="nav-number">1.2.1.</span> <span class="nav-text">DBImpl::Recover</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#NewDB"><span class="nav-number">1.2.1.1.</span> <span class="nav-text">NewDB()</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#DBImpl-RecoverLogFile"><span class="nav-number">1.2.1.2.</span> <span class="nav-text">DBImpl::RecoverLogFile</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VersionEdit"><span class="nav-number">1.3.</span> <span class="nav-text">VersionEdit</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Version"><span class="nav-number">1.4.</span> <span class="nav-text">Version</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VersionSet"><span class="nav-number">1.5.</span> <span class="nav-text">VersionSet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
