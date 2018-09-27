@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="LevelDB源码分析Intro前两篇博客主要注重于LevelDB内部结构及Compaction的机制的分析，该篇博客主要介绍LevelDB对外提供的数个接口，及这些接口的实现，包括这些接口是如何与前述截至相互作用的。 DBImpl::PutDBImpl::Put直接使用了DB::Put的默认实现，即直接构建一个仅有一个Put操作的WriteBatch，然后利用Write来完成操作。 DBImpl">
+<meta name="keywords" content="LevelDB,CPP,Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LevelDB-Interface">
+<meta property="og:url" content="https://linkwk7.github.io/2018/09/27/LevelDB-Interface/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="LevelDB源码分析Intro前两篇博客主要注重于LevelDB内部结构及Compaction的机制的分析，该篇博客主要介绍LevelDB对外提供的数个接口，及这些接口的实现，包括这些接口是如何与前述截至相互作用的。 DBImpl::PutDBImpl::Put直接使用了DB::Put的默认实现，即直接构建一个仅有一个Put操作的WriteBatch，然后利用Write来完成操作。 DBImpl">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-09-27T11:55:12.277Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LevelDB-Interface">
+<meta name="twitter:description" content="LevelDB源码分析Intro前两篇博客主要注重于LevelDB内部结构及Compaction的机制的分析，该篇博客主要介绍LevelDB对外提供的数个接口，及这些接口的实现，包括这些接口是如何与前述截至相互作用的。 DBImpl::PutDBImpl::Put直接使用了DB::Put的默认实现，即直接构建一个仅有一个Put操作的WriteBatch，然后利用Write来完成操作。 DBImpl">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/09/27/LevelDB-Interface/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>LevelDB-Interface | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/09/27/LevelDB-Interface/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">LevelDB-Interface
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-27 19:52:29 / Modified: 19:55:12" itemprop="dateCreated datePublished" datetime="2018-09-27T19:52:29+08:00">2018-09-27</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/LevelDB/" itemprop="url" rel="index"><span itemprop="name">LevelDB</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="LevelDB源码分析"><a href="#LevelDB源码分析" class="headerlink" title="LevelDB源码分析"></a>LevelDB源码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>前两篇博客主要注重于LevelDB内部结构及Compaction的机制的分析，该篇博客主要介绍<br>LevelDB对外提供的数个接口，及这些接口的实现，包括这些接口是如何与前述截至相互作用<br>的。</p>
+<h2 id="DBImpl-Put"><a href="#DBImpl-Put" class="headerlink" title="DBImpl::Put"></a>DBImpl::Put</h2><p>DBImpl::Put直接使用了DB::Put的默认实现，即直接构建一个仅有一个Put操作的WriteBatch，<br>然后利用Write来完成操作。</p>
+<h2 id="DBImpl-Delete"><a href="#DBImpl-Delete" class="headerlink" title="DBImpl::Delete"></a>DBImpl::Delete</h2><p>DBImpl::Delete的实现与DBImpl::Put类似，直接构建一个仅有一个删除操作的WriteBatch，然后让<br>Write完成其余工作。</p>
+<a id="more"></a>
+<h2 id="DBImpl-Write"><a href="#DBImpl-Write" class="headerlink" title="DBImpl::Write"></a>DBImpl::Write</h2><p>DBImpl::Write作为Put和Delete的实际实现，保证了WriteBatch中操作的原子性。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::Write(<span class="keyword">const</span> WriteOptions&amp; options, WriteBatch* my_batch) &#123;</span><br><span class="line">    <span class="function">Writer <span class="title">w</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    w.batch = my_batch;</span><br><span class="line">    w.sync = options.sync;</span><br><span class="line">    w.done = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 构建一个写入的请求之后将该请求置入请求队列中，在等待Condition Variable时会解锁</span></span><br><span class="line">    <span class="comment">// mutex_</span></span><br><span class="line">    <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    writers_.push_back(&amp;w);</span><br><span class="line">    <span class="keyword">while</span> (!w.done &amp;&amp; &amp;w != writers_.front()) &#123;</span><br><span class="line">        w.cv.Wait();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 由于写入时writer可能自动合并为一个，因此该请求可能被其他的线程一并处理</span></span><br><span class="line">    <span class="keyword">if</span> (w.done) &#123;</span><br><span class="line">        <span class="keyword">return</span> w.status;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 为该请求在mem_中保留足够的空间，该函数会在稍后介绍</span></span><br><span class="line">    Status status = MakeRoomForWrite(my_batch == <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">uint64_t</span> last_sequence = versions_-&gt;LastSequence();</span><br><span class="line">    Writer* last_writer = &amp;w;</span><br><span class="line">    <span class="comment">// my_batch 如果为nullptr则表示该次写入是为了触发Compaction</span></span><br><span class="line">    <span class="keyword">if</span> (status.ok() &amp;&amp; my_batch != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="comment">// 为减少写入次数，一次可能会将多个writer合并为一个</span></span><br><span class="line">        WriteBatch* updates = BuildBatchGroup(&amp;last_writer);</span><br><span class="line">        WriteBatchInternal::SetSequence(updates, last_sequence + <span class="number">1</span>);</span><br><span class="line">        last_sequence += WriteBatchInternal::Count(updates);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 将对应的条目写入日志，然后插入mem_中</span></span><br><span class="line">        &#123;</span><br><span class="line">            mutex_.Unlock();</span><br><span class="line">            status = log_-&gt;AddRecord(WriteBatchInternal::Contents(updates));</span><br><span class="line">            <span class="keyword">bool</span> sync_error = <span class="literal">false</span>;</span><br><span class="line">            <span class="keyword">if</span> (status.ok() &amp;&amp; options.sync) &#123;</span><br><span class="line">                status = logfile_-&gt;Sync();</span><br><span class="line">                <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">                    sync_error = <span class="literal">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (status.ok()) &#123;</span><br><span class="line">                status = WriteBatchInternal::InsertInto(updates, mem_);</span><br><span class="line">            &#125;</span><br><span class="line">            mutex_.Lock();</span><br><span class="line">            <span class="keyword">if</span> (sync_error) &#123;</span><br><span class="line">                RecordBackgroundError(status);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (updates == tmp_batch_) tmp_batch_-&gt;Clear();</span><br><span class="line"></span><br><span class="line">        versions_-&gt;SetLastSequence(last_sequence);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 唤醒所有在该次写入中被处理的写入请求</span></span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        Writer* ready = writers_.front();</span><br><span class="line">        writers_.pop_front();</span><br><span class="line">        <span class="keyword">if</span> (ready != &amp;w) &#123;</span><br><span class="line">            ready-&gt;status = status;</span><br><span class="line">            ready-&gt;done = <span class="literal">true</span>;</span><br><span class="line">            ready-&gt;cv.Signal();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (ready == last_writer) <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 唤醒下一个等待的writer</span></span><br><span class="line">    <span class="keyword">if</span> (!writers_.empty()) &#123;</span><br><span class="line">        writers_.front()-&gt;cv.Signal();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> status;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-MakeRoomForWrite"><a href="#DBImpl-MakeRoomForWrite" class="headerlink" title="DBImpl::MakeRoomForWrite"></a>DBImpl::MakeRoomForWrite</h3><p>该函数负责在mem_中有足够的空间来处理该写入请求，如果mem_已满则会创建新的mem_。如果该次请求是<br>用户显式要求的，即由Compaction而来，则该请求需要立刻完成。其参数force表示是否需要将mem_写入<br>level0，哪怕在mem_已有足够的空间。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::MakeRoomForWrite(<span class="keyword">bool</span> force) &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line">    assert(!writers_.empty());</span><br><span class="line">    <span class="keyword">bool</span> allow_delay = !force;</span><br><span class="line">    Status s;</span><br><span class="line">    <span class="keyword">while</span> (<span class="literal">true</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!bg_error_.ok()) &#123;</span><br><span class="line">            s = bg_error_;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (</span><br><span class="line">            allow_delay &amp;&amp;</span><br><span class="line">            versions_-&gt;NumLevelFiles(<span class="number">0</span>) &gt;= config::kL0_SlowdownWritesTrigger) &#123;</span><br><span class="line">            <span class="comment">// 当level0的文件数量较多时会放缓当前写入的处理速度，从而让compaction的线程</span></span><br><span class="line">            <span class="comment">// 有机会来进行compaction，从而减少level0的文件数目。因而避免下述versions_-&gt;NumLevelFiles(0) &gt;= config::kL0_StopWritesTrigger</span></span><br><span class="line">            <span class="comment">// 触发的次数，因为如果那个条件触发会导致该请求一直等待知道Compaction线程</span></span><br><span class="line">            <span class="comment">// 完成工作，这可能为某一个请求带来较高的延迟</span></span><br><span class="line">            mutex_.Unlock();</span><br><span class="line">            env_-&gt;SleepForMicroseconds(<span class="number">1000</span>);</span><br><span class="line">            allow_delay = <span class="literal">false</span>;  <span class="comment">// Do not delay a single write more than once</span></span><br><span class="line">            mutex_.Lock();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!force &amp;&amp;</span><br><span class="line">                (mem_-&gt;ApproximateMemoryUsage() &lt;= options_.write_buffer_size)) &#123;</span><br><span class="line">            <span class="comment">// 当前mem_中仍有足够空间</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (imm_ != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            <span class="comment">// 之前的imm_仍然存在，即上次的Table尚未写入level0</span></span><br><span class="line">            background_work_finished_signal_.Wait();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (versions_-&gt;NumLevelFiles(<span class="number">0</span>) &gt;= config::kL0_StopWritesTrigger) &#123;</span><br><span class="line">            <span class="comment">// level0文件过多，需要等待Compaction线程完成其工作</span></span><br><span class="line">            background_work_finished_signal_.Wait();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 创建新的mem_，并将已有的mem_赋值给imm_，从而让compaction线程将imm_写入</span></span><br><span class="line">            <span class="comment">// level0，同时创建新的日志文件</span></span><br><span class="line">            assert(versions_-&gt;PrevLogNumber() == <span class="number">0</span>);</span><br><span class="line">            <span class="keyword">uint64_t</span> new_log_number = versions_-&gt;NewFileNumber();</span><br><span class="line">            WritableFile* lfile = <span class="literal">nullptr</span>;</span><br><span class="line">            s = env_-&gt;NewWritableFile(LogFileName(dbname_, new_log_number), &amp;lfile);</span><br><span class="line">            <span class="keyword">if</span> (!s.ok()) &#123;</span><br><span class="line">                <span class="comment">// Avoid chewing through file number space in a tight loop.</span></span><br><span class="line">                versions_-&gt;ReuseFileNumber(new_log_number);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">delete</span> log_;</span><br><span class="line">            <span class="keyword">delete</span> logfile_;</span><br><span class="line">            logfile_ = lfile;</span><br><span class="line">            logfile_number_ = new_log_number;</span><br><span class="line">            log_ = <span class="keyword">new</span> <span class="built_in">log</span>::Writer(lfile);</span><br><span class="line">            imm_ = mem_;</span><br><span class="line">            has_imm_.Release_Store(imm_);</span><br><span class="line">            mem_ = <span class="keyword">new</span> MemTable(internal_comparator_);</span><br><span class="line">            mem_-&gt;Ref();</span><br><span class="line">            force = <span class="literal">false</span>;</span><br><span class="line">            MaybeScheduleCompaction();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-BuildBatchGroup"><a href="#DBImpl-BuildBatchGroup" class="headerlink" title="DBImpl::BuildBatchGroup"></a>DBImpl::BuildBatchGroup</h3><p>为了减少多次写入，LevelDB会将多个writer合并为一个，然后一次性写入，从而提升写入的效率。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line">    assert(!writers_.empty());</span><br><span class="line">    Writer* first = writers_.front();</span><br><span class="line">    WriteBatch* result = first-&gt;batch;</span><br><span class="line">    assert(result != <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">size_t</span> size = WriteBatchInternal::ByteSize(first-&gt;batch);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将多个writer合并为一个时会限制该writer不会增长的过大</span></span><br><span class="line">    <span class="keyword">size_t</span> max_size = <span class="number">1</span> &lt;&lt; <span class="number">20</span>;</span><br><span class="line">    <span class="keyword">if</span> (size &lt;= (<span class="number">128</span>&lt;&lt;<span class="number">10</span>)) &#123;</span><br><span class="line">        max_size = size + (<span class="number">128</span>&lt;&lt;<span class="number">10</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    *last_writer = first;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">deque</span>&lt;Writer*&gt;::iterator iter = writers_.begin();</span><br><span class="line">    ++iter;</span><br><span class="line">    <span class="keyword">for</span> (; iter != writers_.end(); ++iter) &#123;</span><br><span class="line">        Writer* w = *iter;</span><br><span class="line">        <span class="keyword">if</span> (w-&gt;sync &amp;&amp; !first-&gt;sync) &#123;</span><br><span class="line">            <span class="comment">// 不会在异步处理的写操作中包含一个同步的写操作</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (w-&gt;batch != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            size += WriteBatchInternal::ByteSize(w-&gt;batch);</span><br><span class="line">            <span class="keyword">if</span> (size &gt; max_size) &#123;</span><br><span class="line">                <span class="comment">// 确保writer的group不会增长的过大</span></span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (result == first-&gt;batch) &#123;</span><br><span class="line">                <span class="comment">// 将所有的更新放入tmp_batch_</span></span><br><span class="line">                result = tmp_batch_;</span><br><span class="line">                assert(WriteBatchInternal::Count(result) == <span class="number">0</span>);</span><br><span class="line">                WriteBatchInternal::Append(result, first-&gt;batch);</span><br><span class="line">            &#125;</span><br><span class="line">            WriteBatchInternal::Append(result, w-&gt;batch);</span><br><span class="line">        &#125;</span><br><span class="line">        *last_writer = w;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="DBImpl-Get"><a href="#DBImpl-Get" class="headerlink" title="DBImpl::Get"></a>DBImpl::Get</h2><p>Get会从当前的数据库中查找某个键对应的值，查找过程中可能使用快照来限制查找的范围。查找时会<br>首先查找mem_与imm_，这两个表代表了所有尚未写入不同level的信息，仅当这两张表中未查找到对应<br>的值后才会进入文件进行查找。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::Get(<span class="keyword">const</span> ReadOptions&amp; options,</span><br><span class="line">               <span class="keyword">const</span> Slice&amp; key,</span><br><span class="line">               <span class="built_in">std</span>::<span class="built_in">string</span>* value) &#123;</span><br><span class="line">    Status s;</span><br><span class="line">    <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    SequenceNumber snapshot;</span><br><span class="line">    <span class="comment">// 确定该次查找所指定的序号，查找时会返回小于该序号且值最大的那个结果</span></span><br><span class="line">    <span class="keyword">if</span> (options.snapshot != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        snapshot =</span><br><span class="line">            <span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> SnapshotImpl*&gt;(options.snapshot)-&gt;sequence_number();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        snapshot = versions_-&gt;LastSequence();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    MemTable* mem = mem_;</span><br><span class="line">    MemTable* imm = imm_;</span><br><span class="line">    Version* current = versions_-&gt;current();</span><br><span class="line">    mem-&gt;Ref();</span><br><span class="line">    <span class="keyword">if</span> (imm != <span class="literal">nullptr</span>) imm-&gt;Ref();</span><br><span class="line">    current-&gt;Ref();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> have_stat_update = <span class="literal">false</span>;</span><br><span class="line">    Version::GetStats stats;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        mutex_.Unlock();</span><br><span class="line">        <span class="function">LookupKey <span class="title">lkey</span><span class="params">(key, snapshot)</span></span>;</span><br><span class="line">        <span class="keyword">if</span> (mem-&gt;Get(lkey, value, &amp;s)) &#123;</span><br><span class="line">            <span class="comment">// 查找mem_</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (imm != <span class="literal">nullptr</span> &amp;&amp; imm-&gt;Get(lkey, value, &amp;s)) &#123;</span><br><span class="line">            <span class="comment">// 查找imm_</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 在当前Version所包含的各个level的文件中进行查找</span></span><br><span class="line">            s = current-&gt;Get(options, lkey, value, &amp;stats);</span><br><span class="line">            have_stat_update = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        mutex_.Lock();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Get可能触发seek compaction</span></span><br><span class="line">    <span class="keyword">if</span> (have_stat_update &amp;&amp; current-&gt;UpdateStats(stats)) &#123;</span><br><span class="line">        MaybeScheduleCompaction();</span><br><span class="line">    &#125;</span><br><span class="line">    mem-&gt;Unref();</span><br><span class="line">    <span class="keyword">if</span> (imm != <span class="literal">nullptr</span>) imm-&gt;Unref();</span><br><span class="line">    current-&gt;Unref();</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="DBImpl-GetSnapshot"><a href="#DBImpl-GetSnapshot" class="headerlink" title="DBImpl::GetSnapshot"></a>DBImpl::GetSnapshot</h2><p>创建一个新的快照仅会在LevelDB中记录该快照对应的序号，从而保证在这个序号之后的修改不会被合并和<br>丢弃。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> Snapshot* DBImpl::GetSnapshot() &#123;</span><br><span class="line">    <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    <span class="keyword">return</span> snapshots_.New(versions_-&gt;LastSequence());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="DBImpl-ReleaseSnapshot"><a href="#DBImpl-ReleaseSnapshot" class="headerlink" title="DBImpl::ReleaseSnapshot"></a>DBImpl::ReleaseSnapshot</h2><p>删除一个快照并不会直接触发所有因快照而产生的重复的值的删除，删除的过程会在之后的归并过程中进行。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::ReleaseSnapshot(<span class="keyword">const</span> Snapshot* snapshot) &#123;</span><br><span class="line">    <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    snapshots_.Delete(<span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> SnapshotImpl*&gt;(snapshot));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="DBImpl-CompactRange"><a href="#DBImpl-CompactRange" class="headerlink" title="DBImpl::CompactRange"></a>DBImpl::CompactRange</h2><p>该函数用于手动触发一次Compaction。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::CompactRange(<span class="keyword">const</span> Slice* begin, <span class="keyword">const</span> Slice* end) &#123;</span><br><span class="line">    <span class="comment">// 在max_level_with_files之后的各个level没有文件的键值范围与该范围重叠</span></span><br><span class="line">    <span class="keyword">int</span> max_level_with_files = <span class="number">1</span>;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">        Version* base = versions_-&gt;current();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> level = <span class="number">1</span>; level &lt; config::kNumLevels; level++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (base-&gt;OverlapInLevel(level, begin, end)) &#123;</span><br><span class="line">                max_level_with_files = level;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 将mem_写入level0</span></span><br><span class="line">    TEST_CompactMemTable();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> level = <span class="number">0</span>; level &lt; max_level_with_files; level++) &#123;</span><br><span class="line">        <span class="comment">// 将每层的与该键值范围相关的文件归并到下一层，期望仅在最高的一层有该键值</span></span><br><span class="line">        TEST_CompactRange(level, begin, end);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-TEST-CompactMemTable"><a href="#DBImpl-TEST-CompactMemTable" class="headerlink" title="DBImpl::TEST_CompactMemTable"></a>DBImpl::TEST_CompactMemTable</h3><p>调度compaction将mem_写入level0中。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::TEST_CompactMemTable() &#123;</span><br><span class="line">    <span class="comment">// nullptr batch means just wait for earlier writes to be done</span></span><br><span class="line">    <span class="comment">// 等待所有已有的writer完成写入，之后利用MakeRoomForWrite将mem写入level0的table中</span></span><br><span class="line">    Status s = Write(WriteOptions(), <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        <span class="comment">// 等待Compaction的完成</span></span><br><span class="line">        <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">        <span class="keyword">while</span> (imm_ != <span class="literal">nullptr</span> &amp;&amp; bg_error_.ok()) &#123;</span><br><span class="line">            background_work_finished_signal_.Wait();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (imm_ != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            s = bg_error_;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> s;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-TEST-CompactRange"><a href="#DBImpl-TEST-CompactRange" class="headerlink" title="DBImpl::TEST_CompactRange"></a>DBImpl::TEST_CompactRange</h3><p>该函数用于手动触发一次归并，尽量使某个键值范围内仅在一个level存在。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::TEST_CompactRange(<span class="keyword">int</span> level, <span class="keyword">const</span> Slice* begin,</span><br><span class="line">                           <span class="keyword">const</span> Slice* end) &#123;</span><br><span class="line">    assert(level &gt;= <span class="number">0</span>);</span><br><span class="line">    assert(level + <span class="number">1</span> &lt; config::kNumLevels);</span><br><span class="line"></span><br><span class="line">    InternalKey begin_storage, end_storage;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设置归并范围</span></span><br><span class="line">    ManualCompaction manual;</span><br><span class="line">    manual.level = level;</span><br><span class="line">    manual.done = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (begin == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        manual.begin = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        begin_storage = InternalKey(*begin, kMaxSequenceNumber, kValueTypeForSeek);</span><br><span class="line">        manual.begin = &amp;begin_storage;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (end == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        manual.end = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        end_storage = InternalKey(*end, <span class="number">0</span>, <span class="keyword">static_cast</span>&lt;ValueType&gt;(<span class="number">0</span>));</span><br><span class="line">        manual.end = &amp;end_storage;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    <span class="keyword">while</span> (!manual.done &amp;&amp; !shutting_down_.Acquire_Load() &amp;&amp; bg_error_.ok()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (manual_compaction_ == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果当前没有其他的手动归并的任务，则将该Compaction设置未当前任务，然后</span></span><br><span class="line">            <span class="comment">// 调度Compaction</span></span><br><span class="line">            <span class="comment">// 注意，在DBImpl::BackgroundCompaction中可能一次仅进行部分归并，而不是用户</span></span><br><span class="line">            <span class="comment">// 指定的整个范围的归并，此时manual.done仍会设为false，因此会继续进行Compaction</span></span><br><span class="line">            <span class="comment">// 的调度</span></span><br><span class="line">            manual_compaction_ = &amp;manual;</span><br><span class="line">            MaybeScheduleCompaction();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 如果有其他的归并任务则等待其完成</span></span><br><span class="line">            background_work_finished_signal_.Wait();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (manual_compaction_ == &amp;manual) &#123;</span><br><span class="line">        manual_compaction_ = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>这三篇博客主要介绍了LevelDB的内部结构、Compaction的实现以及各个接口的实现，但未深入到文件结构等细节。<br>这也是我第一次写博客，还是有很多地方做的不好，希望这几篇博客可以帮助到希望了解或者打算阅读LevelDB源代码<br>的人。我过几天会找一些时间重新整理一下这几篇博客。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/LevelDB/" rel="tag"># LevelDB</a>
+          
+            <a href="/tags/CPP/" rel="tag"># CPP</a>
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/27/LevelDB-Compaction/" rel="next" title="LevelDB-Compaction">
+                <i class="fa fa-chevron-left"></i> LevelDB-Compaction
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#LevelDB源码分析"><span class="nav-number">1.</span> <span class="nav-text">LevelDB源码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intro"><span class="nav-number">1.1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-Put"><span class="nav-number">1.2.</span> <span class="nav-text">DBImpl::Put</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-Delete"><span class="nav-number">1.3.</span> <span class="nav-text">DBImpl::Delete</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-Write"><span class="nav-number">1.4.</span> <span class="nav-text">DBImpl::Write</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-MakeRoomForWrite"><span class="nav-number">1.4.1.</span> <span class="nav-text">DBImpl::MakeRoomForWrite</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-BuildBatchGroup"><span class="nav-number">1.4.2.</span> <span class="nav-text">DBImpl::BuildBatchGroup</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-Get"><span class="nav-number">1.5.</span> <span class="nav-text">DBImpl::Get</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-GetSnapshot"><span class="nav-number">1.6.</span> <span class="nav-text">DBImpl::GetSnapshot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-ReleaseSnapshot"><span class="nav-number">1.7.</span> <span class="nav-text">DBImpl::ReleaseSnapshot</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-CompactRange"><span class="nav-number">1.8.</span> <span class="nav-text">DBImpl::CompactRange</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-TEST-CompactMemTable"><span class="nav-number">1.8.1.</span> <span class="nav-text">DBImpl::TEST_CompactMemTable</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-TEST-CompactRange"><span class="nav-number">1.8.2.</span> <span class="nav-text">DBImpl::TEST_CompactRange</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.9.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
