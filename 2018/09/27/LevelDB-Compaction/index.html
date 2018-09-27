@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="LevelDB源代码分析Intro这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。 在LevelDB中Compactio">
+<meta name="keywords" content="LevelDB,CPP,Database">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LevelDB-Compaction">
+<meta property="og:url" content="https://linkwk7.github.io/2018/09/27/LevelDB-Compaction/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="LevelDB源代码分析Intro这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。 在LevelDB中Compactio">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-09-27T04:12:27.763Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LevelDB-Compaction">
+<meta name="twitter:description" content="LevelDB源代码分析Intro这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。 在LevelDB中Compactio">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/09/27/LevelDB-Compaction/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>LevelDB-Compaction | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/09/27/LevelDB-Compaction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">LevelDB-Compaction
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-27 12:08:55 / Modified: 12:12:27" itemprop="dateCreated datePublished" datetime="2018-09-27T12:08:55+08:00">2018-09-27</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/LevelDB/" itemprop="url" rel="index"><span itemprop="name">LevelDB</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="LevelDB源代码分析"><a href="#LevelDB源代码分析" class="headerlink" title="LevelDB源代码分析"></a>LevelDB源代码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用<br>MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先<br>介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。</p>
+<p>在LevelDB中Compaction的触发可以大致分为两类，第一类是用户调用LevelDB的CompactRange接口<br>来进行底层数据的压缩，第二类是用户调用Get/Write等操作时，随着LevelDB中某一个Level的文件大小<br>或数量或者文件查找次数超过一定阈值来触发Compaction。当Compaction被触发后会统一调用MaybeScheduleCompaction，<br>接下来逐行分析该函数。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::MaybeScheduleCompaction() &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line">    <span class="keyword">if</span> (background_compaction_scheduled_) &#123;</span><br><span class="line">        <span class="comment">// 已有线程正在进行Compaction</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">        <span class="comment">// 正在删除数据库</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!bg_error_.ok()) &#123;</span><br><span class="line">        <span class="comment">// 过去Compaction的过程存在错误</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (imm_ == <span class="literal">nullptr</span> &amp;&amp; manual_compaction_ == <span class="literal">nullptr</span> &amp;&amp;</span><br><span class="line">            !versions_-&gt;NeedsCompaction()) &#123;</span><br><span class="line">        <span class="comment">// 现在不需要进行Compaction</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        background_compaction_scheduled_ = <span class="literal">true</span>;</span><br><span class="line">        <span class="comment">// 进行Compaction，最终调用的是BackgroundCall</span></span><br><span class="line">        env_-&gt;Schedule(&amp;DBImpl::BGWork, <span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h2 id="DBImpl-BackgroundCall"><a href="#DBImpl-BackgroundCall" class="headerlink" title="DBImpl::BackgroundCall"></a>DBImpl::BackgroundCall</h2><p>LevelDB会在单独的线程中调用该函数来完成Compaction，该函数会调用BackgroundCompaction来完成Compaction，<br>之后</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::BackgroundCall() &#123;</span><br><span class="line">    <span class="function">MutexLock <span class="title">l</span><span class="params">(&amp;mutex_)</span></span>;</span><br><span class="line">    assert(background_compaction_scheduled_);</span><br><span class="line">    <span class="keyword">if</span> (shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!bg_error_.ok()) &#123;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        BackgroundCompaction();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    background_compaction_scheduled_ = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 由于之前的BackgroundCompaction可能在某一层产生了很多文件，因此需要再次调度Compaction</span></span><br><span class="line">    MaybeScheduleCompaction();</span><br><span class="line">    <span class="comment">// 唤醒正在等待Compaction的线程，例如某线程发现在进行mem_已满，而imm_被设置，因此需要等待</span></span><br><span class="line">    <span class="comment">// imm_被写入level0中，然后将mem_替换为新的imm_</span></span><br><span class="line">    background_work_finished_signal_.SignalAll();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-BackgroundCompaction"><a href="#DBImpl-BackgroundCompaction" class="headerlink" title="DBImpl::BackgroundCompaction"></a>DBImpl::BackgroundCompaction</h3><p>该函数负责完成手动触发和自动触发的所有Compaction工作。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::BackgroundCompaction() &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// imm_是LevelDB中mem_的一个副本。当mem_占用空间过大后会将将imm_设置为mem_，然后</span></span><br><span class="line">    <span class="comment">// 调度一次Compaction</span></span><br><span class="line">    <span class="keyword">if</span> (imm_ != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="comment">// 将imm_合成入Level0中，该函数会稍后介绍</span></span><br><span class="line">        CompactMemTable();</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Compaction* c;</span><br><span class="line">    <span class="keyword">bool</span> is_manual = (manual_compaction_ != <span class="literal">nullptr</span>);</span><br><span class="line">    InternalKey manual_end;</span><br><span class="line">    <span class="comment">// Compaction可以有两种触发方式，一个是利用LevelDB提供的CompactRange函数手动进行Compaction</span></span><br><span class="line">    <span class="comment">// 另一个是由用户的Get等操作触发Compaction</span></span><br><span class="line">    <span class="keyword">if</span> (is_manual) &#123;</span><br><span class="line">        ManualCompaction* m = manual_compaction_;</span><br><span class="line">        <span class="comment">// 根据用户设定的范围来选择实际进行Compaction的范围，并设置需要进行Compaction所需要</span></span><br><span class="line">        <span class="comment">// 的level和level+1的文件，该函数会在稍后介绍</span></span><br><span class="line">        c = versions_-&gt;CompactRange(m-&gt;level, m-&gt;begin, m-&gt;end);</span><br><span class="line">        m-&gt;done = (c == <span class="literal">nullptr</span>);</span><br><span class="line">        <span class="keyword">if</span> (c != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            <span class="comment">// 为了避免一次归并的范围过大，可能仅归并其中的一小部分范围，因此需要修改manual_end</span></span><br><span class="line">            manual_end = c-&gt;input(<span class="number">0</span>, c-&gt;num_input_files(<span class="number">0</span>) - <span class="number">1</span>)-&gt;largest;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// VersionSet负责挑选出最应当进行Compaction的范围，该函数会在稍后介绍</span></span><br><span class="line">        c = versions_-&gt;PickCompaction();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Status status;</span><br><span class="line">    <span class="keyword">if</span> (c == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!is_manual &amp;&amp; c-&gt;IsTrivialMove()) &#123;</span><br><span class="line">        <span class="comment">// 如果发现某次归并其在level的输入文件仅有一个，在level+1没有对应的输入文件</span></span><br><span class="line">        <span class="comment">// 同时该次归并没有覆盖太多的level+2的文件，则该次归并仅需将文件从level移动到</span></span><br><span class="line">        <span class="comment">// level+1</span></span><br><span class="line">        assert(c-&gt;num_input_files(<span class="number">0</span>) == <span class="number">1</span>);</span><br><span class="line">        FileMetaData* f = c-&gt;input(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">        c-&gt;edit()-&gt;DeleteFile(c-&gt;level(), f-&gt;number);</span><br><span class="line">        c-&gt;edit()-&gt;AddFile(c-&gt;level() + <span class="number">1</span>, f-&gt;number, f-&gt;file_size,</span><br><span class="line">                        f-&gt;smallest, f-&gt;largest);</span><br><span class="line">        status = versions_-&gt;LogAndApply(c-&gt;edit(), &amp;mutex_);</span><br><span class="line">        <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">            RecordBackgroundError(status);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        CompactionState* compact = <span class="keyword">new</span> CompactionState(c);</span><br><span class="line">        <span class="comment">// 进行归并，该函数会在之后进行介绍</span></span><br><span class="line">        status = DoCompactionWork(compact);</span><br><span class="line">        <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">            RecordBackgroundError(status);</span><br><span class="line">        &#125;</span><br><span class="line">        CleanupCompaction(compact);</span><br><span class="line">        c-&gt;ReleaseInputs();</span><br><span class="line">        DeleteObsoleteFiles();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">delete</span> c;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (status.ok()) &#123;</span><br><span class="line">        <span class="comment">// Done</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">        <span class="comment">// Ignore compaction errors found during shutting down</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Log(options_.info_log,</span><br><span class="line">            <span class="string">"Compaction error: %s"</span>, status.ToString().c_str());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (is_manual) &#123;</span><br><span class="line">        ManualCompaction* m = manual_compaction_;</span><br><span class="line">        <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">        m-&gt;done = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!m-&gt;done) &#123;</span><br><span class="line">        <span class="comment">// We only compacted part of the requested range.  Update *m</span></span><br><span class="line">        <span class="comment">// to the range that is left to be compacted.</span></span><br><span class="line">        m-&gt;tmp_storage = manual_end;</span><br><span class="line">        m-&gt;begin = &amp;m-&gt;tmp_storage;</span><br><span class="line">        &#125;</span><br><span class="line">        manual_compaction_ = <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-CompactMemTable"><a href="#DBImpl-CompactMemTable" class="headerlink" title="DBImpl::CompactMemTable()"></a>DBImpl::CompactMemTable()</h3><p>该函数负责将imm_归并入level0中。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::CompactMemTable() &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line">    assert(imm_ != <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 由于将imm_写入level0可能会在level0创建新的文件，因此需要VersionEdit来完成该工作。</span></span><br><span class="line">    VersionEdit edit;</span><br><span class="line">    Version* base = versions_-&gt;current();</span><br><span class="line">    base-&gt;Ref();</span><br><span class="line">    <span class="comment">// 将imm_写入Level0中</span></span><br><span class="line">    Status s = WriteLevel0Table(imm_, &amp;edit, base);</span><br><span class="line">    base-&gt;Unref();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (s.ok() &amp;&amp; shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">        s = Status::IOError(<span class="string">"Deleting DB during memtable compaction"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将VersionEdit应用于当前的VersionSet，从而生成新的当前的Version</span></span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        edit.SetPrevLogNumber(<span class="number">0</span>);</span><br><span class="line">        edit.SetLogNumber(logfile_number_);</span><br><span class="line">        s = versions_-&gt;LogAndApply(&amp;edit, &amp;mutex_);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (s.ok()) &#123;</span><br><span class="line">        <span class="comment">// 清除旧的imm_</span></span><br><span class="line">        imm_-&gt;Unref();</span><br><span class="line">        imm_ = <span class="literal">nullptr</span>;</span><br><span class="line">        has_imm_.Release_Store(<span class="literal">nullptr</span>);</span><br><span class="line">        DeleteObsoleteFiles();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        RecordBackgroundError(s);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="DBImpl-WriteLevel0Table"><a href="#DBImpl-WriteLevel0Table" class="headerlink" title="DBImpl::WriteLevel0Table"></a>DBImpl::WriteLevel0Table</h4><p>该函数会生成一个新的Table文件，然后将imm_中所有的内容都插入该Table文件，则也就导致了由于新生成的level0<br>的文件与之前的level0的文件有重复范围的键值的情况，该情况会在之后的Compaction中被解决，因而在所有大于<br>1的level中每个文件的键值范围都是不重叠的。</p>
+<h3 id="VersionSet-CompactRange"><a href="#VersionSet-CompactRange" class="headerlink" title="VersionSet::CompactRange"></a>VersionSet::CompactRange</h3><p>该函数负责根据用户的输入选择实际进行Compaction的范围。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Compaction* VersionSet::CompactRange(<span class="keyword">int</span> level, <span class="keyword">const</span> InternalKey* begin, <span class="keyword">const</span> InternalKey* end) &#123;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;FileMetaData*&gt; inputs;</span><br><span class="line">    <span class="comment">// 查找在level中所有与begin与end范围有重叠的文件。如果是level0的话，由于不同文件的键值范围可能有</span></span><br><span class="line">    <span class="comment">// 重叠，会尽可能的扩大选择范围，一次选择多个文件。</span></span><br><span class="line">    current_-&gt;GetOverlappingInputs(level, begin, end, &amp;inputs);</span><br><span class="line">    <span class="keyword">if</span> (inputs.empty()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 避免一次Compaction的范围过大，这里根据文件的总大小来进行选择，仅保留部分文件</span></span><br><span class="line">    <span class="keyword">if</span> (level &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">uint64_t</span> limit = MaxFileSizeForLevel(options_, level);</span><br><span class="line">        <span class="keyword">uint64_t</span> total = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; inputs.size(); i++) &#123;</span><br><span class="line">            <span class="keyword">uint64_t</span> s = inputs[i]-&gt;file_size;</span><br><span class="line">            total += s;</span><br><span class="line">            <span class="keyword">if</span> (total &gt;= limit) &#123;</span><br><span class="line">                inputs.resize(i + <span class="number">1</span>);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Compaction* c = <span class="keyword">new</span> Compaction(options_, level);</span><br><span class="line">    c-&gt;input_version_ = current_;</span><br><span class="line">    c-&gt;input_version_-&gt;Ref();</span><br><span class="line">    c-&gt;inputs_[<span class="number">0</span>] = inputs;</span><br><span class="line">    <span class="comment">// 根据该level的输入文件选择level+1的输入文件，该函数会在稍后介绍</span></span><br><span class="line">    SetupOtherInputs(c);</span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="VersionSet-SetupOtherInputs"><a href="#VersionSet-SetupOtherInputs" class="headerlink" title="VersionSet::SetupOtherInputs"></a>VersionSet::SetupOtherInputs</h4><p>该函数根据Compaction在level所选择的文件选择level+1所需要的文件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> VersionSet::SetupOtherInputs(Compaction* c) &#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">int</span> level = c-&gt;level();</span><br><span class="line">    InternalKey smallest, largest;</span><br><span class="line">    <span class="comment">// 根据level所选择的文件获取最大与最小的键值。注意由于每次Compaction的输入与输出的</span></span><br><span class="line">    <span class="comment">// 单位都是文件，因此这里的smallest、largest可能与用户最初选择的Compaction范围不一致</span></span><br><span class="line">    GetRange(c-&gt;inputs_[<span class="number">0</span>], &amp;smallest, &amp;largest);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取在level+1层有哪些文件的键值范围与smallest、largest重叠</span></span><br><span class="line">    current_-&gt;GetOverlappingInputs(level+<span class="number">1</span>, &amp;smallest, &amp;largest, &amp;c-&gt;inputs_[<span class="number">1</span>]);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取level及level+1所有的输入文件的键值中的最大值和最小值</span></span><br><span class="line">    InternalKey all_start, all_limit;</span><br><span class="line">    GetRange2(c-&gt;inputs_[<span class="number">0</span>], c-&gt;inputs_[<span class="number">1</span>], &amp;all_start, &amp;all_limit);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 由于all_start与all_limit的范围必然大于等于level+1的文件的输入范围，且level+1的文件输入</span></span><br><span class="line">    <span class="comment">// 是由level的文件输入范围获取的，因此利用all_start与all_limit在level进行查找时不会导致在</span></span><br><span class="line">    <span class="comment">// level+1层引入更多的文件。这样可以保证在使用相同数量的level+1层的文件的情况下一次归并更多</span></span><br><span class="line">    <span class="comment">// 的level层的文件，提升压缩效率。</span></span><br><span class="line">    <span class="keyword">if</span> (!c-&gt;inputs_[<span class="number">1</span>].empty()) &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;FileMetaData*&gt; expanded0;</span><br><span class="line">        current_-&gt;GetOverlappingInputs(level, &amp;all_start, &amp;all_limit, &amp;expanded0);</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">int64_t</span> inputs0_size = TotalFileSize(c-&gt;inputs_[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">int64_t</span> inputs1_size = TotalFileSize(c-&gt;inputs_[<span class="number">1</span>]);</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">int64_t</span> expanded0_size = TotalFileSize(expanded0);</span><br><span class="line">        <span class="keyword">if</span> (expanded0.size() &gt; c-&gt;inputs_[<span class="number">0</span>].size() &amp;&amp;</span><br><span class="line">            inputs1_size + expanded0_size &lt;</span><br><span class="line">                ExpandedCompactionByteSizeLimit(options_)) &#123;</span><br><span class="line">            InternalKey new_start, new_limit;</span><br><span class="line">            GetRange(expanded0, &amp;new_start, &amp;new_limit);</span><br><span class="line">            <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;FileMetaData*&gt; expanded1;</span><br><span class="line">            current_-&gt;GetOverlappingInputs(level+<span class="number">1</span>, &amp;new_start, &amp;new_limit,</span><br><span class="line">                                            &amp;expanded1);</span><br><span class="line">            <span class="keyword">if</span> (expanded1.size() == c-&gt;inputs_[<span class="number">1</span>].size()) &#123;</span><br><span class="line">                Log(options_-&gt;info_log,</span><br><span class="line">                    <span class="string">"Expanding@%d %d+%d (%ld+%ld bytes) to %d+%d (%ld+%ld bytes)\n"</span>,</span><br><span class="line">                    level,</span><br><span class="line">                    <span class="keyword">int</span>(c-&gt;inputs_[<span class="number">0</span>].size()),</span><br><span class="line">                    <span class="keyword">int</span>(c-&gt;inputs_[<span class="number">1</span>].size()),</span><br><span class="line">                    <span class="keyword">long</span>(inputs0_size), <span class="keyword">long</span>(inputs1_size),</span><br><span class="line">                    <span class="keyword">int</span>(expanded0.size()),</span><br><span class="line">                    <span class="keyword">int</span>(expanded1.size()),</span><br><span class="line">                    <span class="keyword">long</span>(expanded0_size), <span class="keyword">long</span>(inputs1_size));</span><br><span class="line">                smallest = new_start;</span><br><span class="line">                largest = new_limit;</span><br><span class="line">                c-&gt;inputs_[<span class="number">0</span>] = expanded0;</span><br><span class="line">                c-&gt;inputs_[<span class="number">1</span>] = expanded1;</span><br><span class="line">                GetRange2(c-&gt;inputs_[<span class="number">0</span>], c-&gt;inputs_[<span class="number">1</span>], &amp;all_start, &amp;all_limit);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查找所有在level+2层与该范围对应的文件，设置该值是为了确定在归并的过程中不会引起太多的</span></span><br><span class="line">    <span class="comment">// 在level+2层的修改。</span></span><br><span class="line">    <span class="comment">// (parent == level+1; grandparent == level+2)</span></span><br><span class="line">    <span class="keyword">if</span> (level + <span class="number">2</span> &lt; config::kNumLevels) &#123;</span><br><span class="line">        current_-&gt;GetOverlappingInputs(level + <span class="number">2</span>, &amp;all_start, &amp;all_limit,</span><br><span class="line">                                    &amp;c-&gt;grandparents_);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 更新Compaction pointer指向下一次需要开始归并的地址</span></span><br><span class="line">    compact_pointer_[level] = largest.Encode().ToString();</span><br><span class="line">    c-&gt;edit_.SetCompactPointer(level, largest);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="VersionSet-PickCompaction"><a href="#VersionSet-PickCompaction" class="headerlink" title="VersionSet::PickCompaction"></a>VersionSet::PickCompaction</h3><p>该函数是为了当自动触发了归并时，选择一个需要进行归并的范围。自动触发的归并又可分为两类，第一类<br>是由于Recover或者添加新文件时导致某个level文件数量过多或者文件大小过大从而触发的size_compaction；<br>第二类是由于在某个文件上进行了多次的查找，从而触发的seek_compaction。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">Compaction* VersionSet::PickCompaction() &#123;</span><br><span class="line">    Compaction* c;</span><br><span class="line">    <span class="keyword">int</span> level;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">bool</span> size_compaction = (current_-&gt;compaction_score_ &gt;= <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">bool</span> seek_compaction = (current_-&gt;file_to_compact_ != <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">if</span> (size_compaction) &#123;</span><br><span class="line">        level = current_-&gt;compaction_level_;</span><br><span class="line">        assert(level &gt;= <span class="number">0</span>);</span><br><span class="line">        assert(level+<span class="number">1</span> &lt; config::kNumLevels);</span><br><span class="line">        c = <span class="keyword">new</span> Compaction(options_, level);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 在最需要进行Compaction的level中根据compaction_pointer_选择该次需要的输入文件</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; current_-&gt;files_[level].size(); i++) &#123;</span><br><span class="line">            FileMetaData* f = current_-&gt;files_[level][i];</span><br><span class="line">            <span class="keyword">if</span> (compact_pointer_[level].empty() ||</span><br><span class="line">                icmp_.Compare(f-&gt;largest.Encode(), compact_pointer_[level]) &gt; <span class="number">0</span>) &#123;</span><br><span class="line">                c-&gt;inputs_[<span class="number">0</span>].push_back(f);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (c-&gt;inputs_[<span class="number">0</span>].empty()) &#123;</span><br><span class="line">            c-&gt;inputs_[<span class="number">0</span>].push_back(current_-&gt;files_[level][<span class="number">0</span>]);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (seek_compaction) &#123;</span><br><span class="line">        level = current_-&gt;file_to_compact_level_;</span><br><span class="line">        c = <span class="keyword">new</span> Compaction(options_, level);</span><br><span class="line">        c-&gt;inputs_[<span class="number">0</span>].push_back(current_-&gt;file_to_compact_);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    c-&gt;input_version_ = current_;</span><br><span class="line">    c-&gt;input_version_-&gt;Ref();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果是在level0，在选择好需要进行Compaction的文件后会同时选择所有与该文件有重叠</span></span><br><span class="line">    <span class="comment">// 键值范围的文件</span></span><br><span class="line">    <span class="keyword">if</span> (level == <span class="number">0</span>) &#123;</span><br><span class="line">        InternalKey smallest, largest;</span><br><span class="line">        GetRange(c-&gt;inputs_[<span class="number">0</span>], &amp;smallest, &amp;largest);</span><br><span class="line">        current_-&gt;GetOverlappingInputs(<span class="number">0</span>, &amp;smallest, &amp;largest, &amp;c-&gt;inputs_[<span class="number">0</span>]);</span><br><span class="line">        assert(!c-&gt;inputs_[<span class="number">0</span>].empty());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据level的文件选择level+1的输入文件</span></span><br><span class="line">    SetupOtherInputs(c);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="DBImpl-DoCompactionWork"><a href="#DBImpl-DoCompactionWork" class="headerlink" title="DBImpl::DoCompactionWork"></a>DBImpl::DoCompactionWork</h3><p>该函数负责执行实际的归并工作，会从level与level+1的文件中读取输入，进行归并，删除不必要<br>的条目然后在level+1生成新的Table文件。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br></pre></td><td class="code"><pre><span class="line">Status DBImpl::DoCompactionWork(CompactionState* compact) &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    assert(versions_-&gt;NumLevelFiles(compact-&gt;compaction-&gt;level()) &gt; <span class="number">0</span>);</span><br><span class="line">    assert(compact-&gt;builder == <span class="literal">nullptr</span>);</span><br><span class="line">    assert(compact-&gt;outfile == <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="comment">// 保留在该序号之后的值</span></span><br><span class="line">    <span class="keyword">if</span> (snapshots_.empty()) &#123;</span><br><span class="line">        compact-&gt;smallest_snapshot = versions_-&gt;LastSequence();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        compact-&gt;smallest_snapshot = snapshots_.oldest()-&gt;sequence_number();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    mutex_.Unlock();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 生成一个迭代器用于遍历所有的输入范围，即level和level+1的所有文件</span></span><br><span class="line">    Iterator* input = versions_-&gt;MakeInputIterator(compact-&gt;compaction);</span><br><span class="line">    input-&gt;SeekToFirst();</span><br><span class="line">    Status status;</span><br><span class="line">    ParsedInternalKey ikey;</span><br><span class="line">    <span class="built_in">std</span>::<span class="built_in">string</span> current_user_key;</span><br><span class="line">    <span class="keyword">bool</span> has_current_user_key = <span class="literal">false</span>;</span><br><span class="line">    SequenceNumber last_sequence_for_key = kMaxSequenceNumber;</span><br><span class="line">    <span class="keyword">for</span> (; input-&gt;Valid() &amp;&amp; !shutting_down_.Acquire_Load(); ) &#123;</span><br><span class="line">        <span class="comment">// 如果当前有imm_被生成则有限进行imm_的归并</span></span><br><span class="line">        <span class="keyword">if</span> (has_imm_.NoBarrier_Load() != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            <span class="keyword">const</span> <span class="keyword">uint64_t</span> imm_start = env_-&gt;NowMicros();</span><br><span class="line">            mutex_.Lock();</span><br><span class="line">            <span class="keyword">if</span> (imm_ != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">                CompactMemTable();</span><br><span class="line">                <span class="comment">// 唤醒正在等待imm_归并的线程</span></span><br><span class="line">                background_work_finished_signal_.SignalAll();</span><br><span class="line">            &#125;</span><br><span class="line">            mutex_.Unlock();</span><br><span class="line">            imm_micros += (env_-&gt;NowMicros() - imm_start);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Slice key = input-&gt;key();</span><br><span class="line">        <span class="keyword">if</span> (compact-&gt;compaction-&gt;ShouldStopBefore(key) &amp;&amp;</span><br><span class="line">            compact-&gt;builder != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果当前的归并以及覆盖了较多的level+2的文件，则停止继续归并</span></span><br><span class="line">            status = FinishCompactionOutputFile(compact, input);</span><br><span class="line">            <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">bool</span> drop = <span class="literal">false</span>;</span><br><span class="line">        <span class="keyword">if</span> (!ParseInternalKey(key, &amp;ikey)) &#123;</span><br><span class="line">            current_user_key.clear();</span><br><span class="line">            has_current_user_key = <span class="literal">false</span>;</span><br><span class="line">            last_sequence_for_key = kMaxSequenceNumber;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (!has_current_user_key ||</span><br><span class="line">                user_comparator()-&gt;Compare(ikey.user_key,</span><br><span class="line">                                            Slice(current_user_key)) != <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">// 归并过程中第一次见到该键值</span></span><br><span class="line">                current_user_key.assign(ikey.user_key.data(), ikey.user_key.size());</span><br><span class="line">                has_current_user_key = <span class="literal">true</span>;</span><br><span class="line">                last_sequence_for_key = kMaxSequenceNumber;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 由于在Table中键值对按照键值递增，相同键值序号递减的方式排列，因此针对每个</span></span><br><span class="line">            <span class="comment">// 键值需要至少保留一个最新的条目，其余的条目如果处在所有快照之前则可以删除</span></span><br><span class="line">            <span class="keyword">if</span> (last_sequence_for_key &lt;= compact-&gt;smallest_snapshot) &#123;</span><br><span class="line">                drop = <span class="literal">true</span>;    <span class="comment">// (A)</span></span><br><span class="line">            &#125; <span class="keyword">else</span> <span class="keyword">if</span> (ikey.type == kTypeDeletion &amp;&amp;</span><br><span class="line">                        ikey.sequence &lt;= compact-&gt;smallest_snapshot &amp;&amp;</span><br><span class="line">                        compact-&gt;compaction-&gt;IsBaseLevelForKey(ikey.user_key)) &#123;</span><br><span class="line">                <span class="comment">// 如果该键值对已经被标记为删除、该键值对不在某个快照之后、更高的level</span></span><br><span class="line">                <span class="comment">// 没有该键值的条目(防止删除该条目之后由于更高level的键值导致删除的值重新出现)</span></span><br><span class="line">                <span class="comment">// 之后的循环中有相同的键但是序号更小的值会由于仅保留最新的序号的键值对而被删除</span></span><br><span class="line">                drop = <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            last_sequence_for_key = ikey.sequence;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!drop) &#123;</span><br><span class="line">            <span class="comment">// 打开输出文件</span></span><br><span class="line">            <span class="keyword">if</span> (compact-&gt;builder == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">                status = OpenCompactionOutputFile(compact);</span><br><span class="line">                <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (compact-&gt;builder-&gt;NumEntries() == <span class="number">0</span>) &#123;</span><br><span class="line">                compact-&gt;current_output()-&gt;smallest.DecodeFrom(key);</span><br><span class="line">            &#125;</span><br><span class="line">            compact-&gt;current_output()-&gt;largest.DecodeFrom(key);</span><br><span class="line">            compact-&gt;builder-&gt;Add(key, input-&gt;value());</span><br><span class="line"></span><br><span class="line">            <span class="comment">// 输出文件大小达到一定程度后关闭该文件</span></span><br><span class="line">            <span class="keyword">if</span> (compact-&gt;builder-&gt;FileSize() &gt;=</span><br><span class="line">                compact-&gt;compaction-&gt;MaxOutputFileSize()) &#123;</span><br><span class="line">                status = FinishCompactionOutputFile(compact, input);</span><br><span class="line">                <span class="keyword">if</span> (!status.ok()) &#123;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        input-&gt;Next();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (status.ok() &amp;&amp; shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">        status = Status::IOError(<span class="string">"Deleting DB during compaction"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (status.ok() &amp;&amp; compact-&gt;builder != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        status = FinishCompactionOutputFile(compact, input);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (status.ok()) &#123;</span><br><span class="line">        status = input-&gt;status();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">delete</span> input;</span><br><span class="line">    input = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>总结一下，LevelDB的Compaction的流程如下：</p>
+<ul>
+<li>用户手动调用CompactRange或由于某个level文件数过多等条件触发Compaction</li>
+<li>Compaction的输入输出单位都是文件，因此会首先根据用户输入或compaction_pointer等信息确定归并范围</li>
+<li>归并过程中如果发现imm_被设置会优先将imm_写入level0中</li>
+<li>找到level及level+1所对应的与该次归并相关的文件</li>
+<li>将这些文件归并为新的Table文件置入level+1中，之后可能设置compaction_pointer指向下一次需要开始归并的位置</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/LevelDB/" rel="tag"># LevelDB</a>
+          
+            <a href="/tags/CPP/" rel="tag"># CPP</a>
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/24/LevelDB-Open/" rel="next" title="LevelDB_Open">
+                <i class="fa fa-chevron-left"></i> LevelDB_Open
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">3</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#LevelDB源代码分析"><span class="nav-number">1.</span> <span class="nav-text">LevelDB源代码分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intro"><span class="nav-number">1.1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#DBImpl-BackgroundCall"><span class="nav-number">1.2.</span> <span class="nav-text">DBImpl::BackgroundCall</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-BackgroundCompaction"><span class="nav-number">1.2.1.</span> <span class="nav-text">DBImpl::BackgroundCompaction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-CompactMemTable"><span class="nav-number">1.2.2.</span> <span class="nav-text">DBImpl::CompactMemTable()</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#DBImpl-WriteLevel0Table"><span class="nav-number">1.2.2.1.</span> <span class="nav-text">DBImpl::WriteLevel0Table</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VersionSet-CompactRange"><span class="nav-number">1.2.3.</span> <span class="nav-text">VersionSet::CompactRange</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#VersionSet-SetupOtherInputs"><span class="nav-number">1.2.3.1.</span> <span class="nav-text">VersionSet::SetupOtherInputs</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#VersionSet-PickCompaction"><span class="nav-number">1.2.4.</span> <span class="nav-text">VersionSet::PickCompaction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DBImpl-DoCompactionWork"><span class="nav-number">1.2.5.</span> <span class="nav-text">DBImpl::DoCompactionWork</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
