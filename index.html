@@ -302,6 +302,183 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/06/raft/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/06/raft/" itemprop="url">
+                  Raft
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-06 18:30:39 / Modified: 18:49:38" itemprop="dateCreated datePublished" datetime="2018-10-06T18:30:39+08:00">2018-10-06</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/" itemprop="url" rel="index"><span itemprop="name">Distributed System</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/Consensus/" itemprop="url" rel="index"><span itemprop="name">Consensus</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题<in search="" of="" an="" understandable="" consensus="" algorithm="">所述，该算法的一个首要目标就是容易理解。</in></p>
+<p>接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部分就是领导人的选举，第二部分就是让leader负责接受用户请求并将自己的日志发送给所有的follower，让follower的日志与自己保持一致，同时当某个日志已经被复制到大多数机器上时，leader会负责通知所有follower。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/10/06/raft/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/09/27/LevelDB-Interface/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -348,12 +525,24 @@
                 
               
 
-              <time title="Created: 2018-09-27 19:52:29 / Modified: 19:55:12" itemprop="dateCreated datePublished" datetime="2018-09-27T19:52:29+08:00">2018-09-27</time>
+              <time title="Created: 2018-09-27 19:52:29" itemprop="dateCreated datePublished" datetime="2018-09-27T19:52:29+08:00">2018-09-27</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-10-01 07:23:16" itemprop="dateModified" datetime="2018-10-01T07:23:16+08:00">2018-10-01</time>
               
             
           </span>
@@ -419,9 +608,9 @@
 
       
         
-          <h1 id="LevelDB源码分析"><a href="#LevelDB源码分析" class="headerlink" title="LevelDB源码分析"></a>LevelDB源码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>前两篇博客主要注重于LevelDB内部结构及Compaction的机制的分析，该篇博客主要介绍<br>LevelDB对外提供的数个接口，及这些接口的实现，包括这些接口是如何与前述截至相互作用<br>的。</p>
-<h2 id="DBImpl-Put"><a href="#DBImpl-Put" class="headerlink" title="DBImpl::Put"></a>DBImpl::Put</h2><p>DBImpl::Put直接使用了DB::Put的默认实现，即直接构建一个仅有一个Put操作的WriteBatch，<br>然后利用Write来完成操作。</p>
-<h2 id="DBImpl-Delete"><a href="#DBImpl-Delete" class="headerlink" title="DBImpl::Delete"></a>DBImpl::Delete</h2><p>DBImpl::Delete的实现与DBImpl::Put类似，直接构建一个仅有一个删除操作的WriteBatch，然后让<br>Write完成其余工作。</p>
+          <h1 id="LevelDB源码分析"><a href="#LevelDB源码分析" class="headerlink" title="LevelDB源码分析"></a>LevelDB源码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>前两篇博客主要注重于LevelDB内部结构及Compaction的机制的分析，该篇博客主要介绍LevelDB对外提供的数个接口，及这些接口的实现，包括这些接口是如何与前述截至相互作用的。</p>
+<h2 id="DBImpl-Put"><a href="#DBImpl-Put" class="headerlink" title="DBImpl::Put"></a>DBImpl::Put</h2><p>DBImpl::Put直接使用了DB::Put的默认实现，即直接构建一个仅有一个Put操作的WriteBatch，然后利用Write来完成操作。</p>
+<h2 id="DBImpl-Delete"><a href="#DBImpl-Delete" class="headerlink" title="DBImpl::Delete"></a>DBImpl::Delete</h2><p>DBImpl::Delete的实现与DBImpl::Put类似，直接构建一个仅有一个删除操作的WriteBatch，然后让Write完成其余工作。</p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2018/09/27/LevelDB-Interface/#more" rel="contents">
@@ -526,12 +715,24 @@
                 
               
 
-              <time title="Created: 2018-09-27 12:08:55 / Modified: 12:12:27" itemprop="dateCreated datePublished" datetime="2018-09-27T12:08:55+08:00">2018-09-27</time>
+              <time title="Created: 2018-09-27 12:08:55" itemprop="dateCreated datePublished" datetime="2018-09-27T12:08:55+08:00">2018-09-27</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-10-01 07:22:41" itemprop="dateModified" datetime="2018-10-01T07:22:41+08:00">2018-10-01</time>
               
             
           </span>
@@ -597,8 +798,8 @@
 
       
         
-          <h1 id="LevelDB源代码分析"><a href="#LevelDB源代码分析" class="headerlink" title="LevelDB源代码分析"></a>LevelDB源代码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用<br>MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先<br>介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。</p>
-<p>在LevelDB中Compaction的触发可以大致分为两类，第一类是用户调用LevelDB的CompactRange接口<br>来进行底层数据的压缩，第二类是用户调用Get/Write等操作时，随着LevelDB中某一个Level的文件大小<br>或数量或者文件查找次数超过一定阈值来触发Compaction。当Compaction被触发后会统一调用MaybeScheduleCompaction，<br>接下来逐行分析该函数。</p>
+          <h1 id="LevelDB源代码分析"><a href="#LevelDB源代码分析" class="headerlink" title="LevelDB源代码分析"></a>LevelDB源代码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。</p>
+<p>在LevelDB中Compaction的触发可以大致分为两类，第一类是用户调用LevelDB的CompactRange接口来进行底层数据的压缩，第二类是用户调用Get/Write等操作时，随着LevelDB中某一个Level的文件大小或数量或者文件查找次数超过一定阈值来触发Compaction。当Compaction被触发后会统一调用MaybeScheduleCompaction，接下来逐行分析该函数。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::MaybeScheduleCompaction() &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line">    <span class="keyword">if</span> (background_compaction_scheduled_) &#123;</span><br><span class="line">        <span class="comment">// 已有线程正在进行Compaction</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">        <span class="comment">// 正在删除数据库</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!bg_error_.ok()) &#123;</span><br><span class="line">        <span class="comment">// 过去Compaction的过程存在错误</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (imm_ == <span class="literal">nullptr</span> &amp;&amp; manual_compaction_ == <span class="literal">nullptr</span> &amp;&amp;</span><br><span class="line">            !versions_-&gt;NeedsCompaction()) &#123;</span><br><span class="line">        <span class="comment">// 现在不需要进行Compaction</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        background_compaction_scheduled_ = <span class="literal">true</span>;</span><br><span class="line">        <span class="comment">// 进行Compaction，最终调用的是BackgroundCall</span></span><br><span class="line">        env_-&gt;Schedule(&amp;DBImpl::BGWork, <span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <div class="post-button text-center">
@@ -704,12 +905,24 @@
                 
               
 
-              <time title="Created: 2018-09-24 11:44:37 / Modified: 22:07:26" itemprop="dateCreated datePublished" datetime="2018-09-24T11:44:37+08:00">2018-09-24</time>
+              <time title="Created: 2018-09-24 11:44:37" itemprop="dateCreated datePublished" datetime="2018-09-24T11:44:37+08:00">2018-09-24</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-10-01 07:22:07" itemprop="dateModified" datetime="2018-10-01T07:22:07+08:00">2018-10-01</time>
               
             
           </span>
@@ -775,7 +988,7 @@
 
       
         
-          <h1 id="LevelDB源码分析"><a href="#LevelDB源码分析" class="headerlink" title="LevelDB源码分析"></a>LevelDB源码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>我们从LevelDB给定的示例入手对LevelDB的源代码进行分析，本篇仅分析其中的Open函数，该函数用于打开一个<br>数据库。</p>
+          <h1 id="LevelDB源码分析"><a href="#LevelDB源码分析" class="headerlink" title="LevelDB源码分析"></a>LevelDB源码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>我们从LevelDB给定的示例入手对LevelDB的源代码进行分析，本篇仅分析其中的Open函数，该函数用于打开一个数据库。</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">leveldb::DB* db;  </span><br><span class="line">leveldb::Options options;  </span><br><span class="line">options.create_if_missing = <span class="literal">true</span>;  </span><br><span class="line">leveldb::Status status = leveldb::DB::Open(options, <span class="string">"/tmp/testdb"</span>, &amp;db);  </span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">string</span> value;  </span><br><span class="line">leveldb::Status s = db-&gt;Get(leveldb::ReadOptions(), key1, &amp;value);  </span><br><span class="line"><span class="keyword">if</span> (s.ok()) s = db-&gt;Put(leveldb::WriteOptions(), key2, value);  </span><br><span class="line"><span class="keyword">if</span> (s.ok()) s = db-&gt;Delete(leveldb::WriteOptions(), key1);  </span><br><span class="line"><span class="keyword">delete</span> db;</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <div class="post-button text-center">
@@ -1007,7 +1220,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-count">5</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -1026,7 +1239,11 @@
                     
                       
                     
-                    <span class="site-state-item-count">3</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -1045,7 +1262,13 @@
                     
                       
                     
-                    <span class="site-state-item-count">3</span>
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

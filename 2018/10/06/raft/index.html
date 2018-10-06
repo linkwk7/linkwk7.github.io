@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="RaftIntro共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题所述，该算法的一个首要目标就是容易理解。 接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部">
+<meta name="keywords" content="Distributed System,Consensus,Raft">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Raft">
+<meta property="og:url" content="https://linkwk7.github.io/2018/10/06/raft/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="RaftIntro共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题所述，该算法的一个首要目标就是容易理解。 接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://linkwk7.github.io/2018/10/06/raft/0.PNG">
+<meta property="og:updated_time" content="2018-10-06T10:49:38.100Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Raft">
+<meta name="twitter:description" content="RaftIntro共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题所述，该算法的一个首要目标就是容易理解。 接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部">
+<meta name="twitter:image" content="https://linkwk7.github.io/2018/10/06/raft/0.PNG">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/10/06/raft/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Raft | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/06/raft/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Raft
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-06 18:30:39 / Modified: 18:49:38" itemprop="dateCreated datePublished" datetime="2018-10-06T18:30:39+08:00">2018-10-06</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/" itemprop="url" rel="index"><span itemprop="name">Distributed System</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/Consensus/" itemprop="url" rel="index"><span itemprop="name">Consensus</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题<in search="" of="" an="" understandable="" consensus="" algorithm="">所述，该算法的一个首要目标就是容易理解。</in></p>
+<p>接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部分就是领导人的选举，第二部分就是让leader负责接受用户请求并将自己的日志发送给所有的follower，让follower的日志与自己保持一致，同时当某个日志已经被复制到大多数机器上时，leader会负责通知所有follower。</p>
+<a id="more"></a>
+<h2 id="Leader-Election"><a href="#Leader-Election" class="headerlink" title="Leader Election"></a>Leader Election</h2><p>Raft中共有三种角色，分别是leader、candidate和follower。其中leader负责处理用户请求，与所有follower进行通信从而完成共识；candidate状态用于选举出新的leader；follower仅处理来自leader和candidate的请求，并不会主动与其他节点通信。</p>
+<p>说完Raft种的三种角色，我们可以看一看Raft的Leader的选举的过程了。Raft在每个follower和candidate节点都会维护一个计时器，当一段时间没有收到来自leader的消息后就会认为这个leader挂了，需要重新选举出leader。但是由于网络分裂的存在，可能之前的leader并没挂，只是网络出现问题，而网络问题修复后就会出现同一时间出现多个leader的问题。为了解决这个问题，Raft将时间分割为多个term，每个任期会有一个递增的任期号，每个任期的开始时都会有一次新的leader的选举。一个节点如果希望成为该term的Leader，会需要大多数节点的投票，因此这也就保证了在同一Term中最多只会有一个Leader。每个被选举出的Leader负责在该任期中所有的客户请求。每个节点还会保留一个本地的任期号，任何节点在交换信息时也都会带上该任期号，一个节点如果收到的消息带有一个较大的任期号时会更新本地任期号，如果收到的消息带有一个较小的任期号时则会直接拒绝该消息。</p>
+<p>Raft的每个节点的初始角色都是follower，如果该节点能够收到当前term的leader的心跳信息则已知维持在follower状态，如果间隔一段时间没有收到Leader的消息则开始选举，该节点会首先从follower状态转换成candidate状态，然后广播投票请求。那么该次尝试选举可能有三种结果，第一种是发现了一个更新的Leader，这种情况下该节点会直接转换为follower，然后接受leader的请求；第二种是收到了大多数节点的投票，此时该节点成为新的Leader，并周期性的广播心跳消息来同时其他节点；第三种是计时器超时，该candidate仍然没有收到足够的投票，此时该节点会重新增加term号开始新的选举，这一机制是为了防止多个节点同时开始选举，导致没有任何一个节点能够得到足够多的投票的情况。为了保证一个term最多仅有一个节点被选举出来，因此每个节点针对一个term最多仅能投一票。需要注意的是一个节点在收到任何一种消息时，如果term号比本地保留的term小则拒绝消息，如果比本地的大则会先更新节点的状态，因此每个节点最终处理的消息中所带有的任期号都与本地的任期号相同。为了防止在leader失效的情况下多个节点可能同时开始新的选举，然后导致没有任何一个节点获得大多数投票的情况频繁发生，每个节点会在一定范围内随机设置超时长度。</p>
+<h2 id="Log-Replication"><a href="#Log-Replication" class="headerlink" title="Log Replication"></a>Log Replication</h2><p>当一个节点被选举成为leader后，该节点会负责该term里所有的客户端的请求的处理，这个leader会首先将客户端的请求添加到自己的日志中，之后利用AppendEntries来想其他节点复制该日志，当某条日志已经被安全的复制后，leader会将该日志对应的命令应用到状态机中，并将执行结果返回给客户端。leader会尽可能的让所有节点都拥有与自己相同的日志。Raft将可以应用到状态机的日志条目称为committed，并保证所有committed的日志条目最终会被所有的状态机执行。当创建一个日志的leader将该日志条目复制到大多数的follower上后，该日志条目就认为是committed的，同时还会commit该日志条目之前的所有日志条目。leader会将已知的commit的最高的日志序号包含在所有AppendEntries消息中，来让follower能够知道哪些条目已经提交，然后应用到本地的状态机中。</p>
+<p>Raft维护了一系列性质，其中一条就是日志匹配性质，该性质维护了不同节点之间日志的关系，剩余性质会在下一节进行介绍。raft中的日志匹配性质包括两条，第一条是如果两个节点的日志中的两个条目有相同的序号和任期号则这两个条目有着相同的内容；第二条是如果两个节点的日志中某两个条目有着相同的序号和任期号则这两个条目之前的所有日志条目都有着相同的内容。第一个性质来源于每个term仅有最多一个leader，而一个leader仅会在一个位置设置一个条目，因此两个日志如果任期号与序号都相同则内容一定相同。而第二个性质与AppendEntries的实际流程有关，Leader的AppendEntries请求中会包含一系列的日志以及在这些日志之前的一个条目的序号与任期号，当一个follower收到leader的AppendEntries请求时会对之前一个条目的任期号与序号进行匹配，仅当这个日志条目的序号和任期号与AppendEntries参数中的相同时才会将这些条目添加到自己的日志中，否则会删除该点及之后的所有日志条目。因此利用性质1与follower在AppendEntries时进行的一致性检验可以保证性质2。</p>
+<p>那么我们来看一看为什么每个leader仅能commit自己创建的日志，而不能直接commit之前term的日志。下图来自于论文中的Figure8，该图中首先S1成为了term2的leader，然后在复制了自己的日志到一小部分节点后崩溃，之后S5成为了term3的leader，并在2号位置创建了新的条目，随后S5崩溃，S1成为term4的leader，并开始将复制日志，其中term2的日志被复制到大多数节点，但假设此时直接commit该日志，随后S1崩溃、S5重启，其当选为新的Leader，由于该leader仅有已commit的所有条目，因此此时S5并没有S1在term2创建的条目，因此S5可能覆盖掉已commit的日志，这直接违反了raft需要维护的性质。而如果之间term的日志条目仅能由间接提交，此时如(e)，新选举出的leader必需包含term4的日志，因而必须包含term2的日志，因此不会被之后选举出的leader覆写。简而言之，之所以不能直接commit之前term的日志，是因为由于新选举出的leader可能并不包含之前term的日志，因此可能覆写这些日志，而利用间接commit可以保证新选举出的leader一定包含之前的所有日志，因而不会覆盖这些日志。</p>
+<p><img src="/2018/10/06/raft/0.PNG" alt="Figure8"></p>
+<h2 id="Safety"><a href="#Safety" class="headerlink" title="Safety"></a>Safety</h2><p>除了日志匹配属性，raft维护了一系列的性质，本节会逐一介绍这些性质并介绍这些性质是如何被满足的。</p>
+<h3 id="选举安全性"><a href="#选举安全性" class="headerlink" title="选举安全性"></a>选举安全性</h3><p>每个任期最多仅有一个节点被选举为leader。通过限制每个节点在每个任期仅能为一个节点投票，同时一个节点如果需要成为这个任期的leader需要大多数节点的投票，因此每个任期最多仅有一个leader。</p>
+<h3 id="Leader仅添加日志"><a href="#Leader仅添加日志" class="headerlink" title="Leader仅添加日志"></a>Leader仅添加日志</h3><p>Leader仅会向其日志中添加条目，而不会删除或修改已有条目。</p>
+<h3 id="Leader完整性"><a href="#Leader完整性" class="headerlink" title="Leader完整性"></a>Leader完整性</h3><p>如果一个日志条目在term i被提交，那么这个日志条目会出现在所有term高于i的leader中。这一性质来自于一个candidate如果希望成为leader需要得到大多数节点的投票，因此该candidate的日志比大多数节点都新，同时由于该日志条目已经commit，因此会出现在大多数节点中，因此leader一定会包含该日志条目。</p>
+<h3 id="状态机安全性"><a href="#状态机安全性" class="headerlink" title="状态机安全性"></a>状态机安全性</h3><p>如果一个服务器在一个序号处应用了一条指令，那么所有状态机在该序号处都会应用同样的指令。该性质可由Leader完整性得来。</p>
+<h2 id="日志压缩"><a href="#日志压缩" class="headerlink" title="日志压缩"></a>日志压缩</h2><p>raft可以使用快照来消减日志所占的存储空间，通过记录状态机的状态，从而可以安全的删除在进行快照时已经被应用的日志。每个节点会独立的进行快照，但leader可能将自己的快照发送给落后较多的节点来更新其状态。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>该篇博客仅对raft的一些基础性质和原理进行介绍，具体执行流程可以参见论文，raft的配置变更也没有进行介绍，希望能够给正在了解raft的人提供一些帮助。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Distributed-System/" rel="tag"># Distributed System</a>
+          
+            <a href="/tags/Consensus/" rel="tag"># Consensus</a>
+          
+            <a href="/tags/Raft/" rel="tag"># Raft</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/27/LevelDB-Interface/" rel="next" title="LevelDB-Interface">
+                <i class="fa fa-chevron-left"></i> LevelDB-Interface
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">5</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">6</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Raft"><span class="nav-number">1.</span> <span class="nav-text">Raft</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intro"><span class="nav-number">1.1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Leader-Election"><span class="nav-number">1.2.</span> <span class="nav-text">Leader Election</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Log-Replication"><span class="nav-number">1.3.</span> <span class="nav-text">Log Replication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Safety"><span class="nav-number">1.4.</span> <span class="nav-text">Safety</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#选举安全性"><span class="nav-number">1.4.1.</span> <span class="nav-text">选举安全性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader仅添加日志"><span class="nav-number">1.4.2.</span> <span class="nav-text">Leader仅添加日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader完整性"><span class="nav-number">1.4.3.</span> <span class="nav-text">Leader完整性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#状态机安全性"><span class="nav-number">1.4.4.</span> <span class="nav-text">状态机安全性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#日志压缩"><span class="nav-number">1.5.</span> <span class="nav-text">日志压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
