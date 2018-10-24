@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="排序时间复杂度、稳定性等   算法 时间复杂度(平均) 时间复杂度(最坏) 时间复杂度(最好) 空间复杂度 稳定性     冒泡排序 O(n^2) O(n^2) O(1) O(1) 稳定   选择排序 O(n^2) O(n^2) O(n^2) O(1) 不稳定   插入排序 O(n^2) O(n^2) O(n) O(1) 稳定   希尔排序 O(n^1.3) O(n^2) O(n) O(1) 不稳">
+<meta name="keywords" content="Algorithm,Sort">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Sort">
+<meta property="og:url" content="https://linkwk7.github.io/2018/10/24/Sort/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="排序时间复杂度、稳定性等   算法 时间复杂度(平均) 时间复杂度(最坏) 时间复杂度(最好) 空间复杂度 稳定性     冒泡排序 O(n^2) O(n^2) O(1) O(1) 稳定   选择排序 O(n^2) O(n^2) O(n^2) O(1) 不稳定   插入排序 O(n^2) O(n^2) O(n) O(1) 稳定   希尔排序 O(n^1.3) O(n^2) O(n) O(1) 不稳">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-10-24T11:08:07.451Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Sort">
+<meta name="twitter:description" content="排序时间复杂度、稳定性等   算法 时间复杂度(平均) 时间复杂度(最坏) 时间复杂度(最好) 空间复杂度 稳定性     冒泡排序 O(n^2) O(n^2) O(1) O(1) 稳定   选择排序 O(n^2) O(n^2) O(n^2) O(1) 不稳定   插入排序 O(n^2) O(n^2) O(n) O(1) 稳定   希尔排序 O(n^1.3) O(n^2) O(n) O(1) 不稳">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/10/24/Sort/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Sort | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/24/Sort/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Sort
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-24 19:05:47 / Modified: 19:08:07" itemprop="dateCreated datePublished" datetime="2018-10-24T19:05:47+08:00">2018-10-24</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Algorithm/" itemprop="url" rel="index"><span itemprop="name">Algorithm</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="排序"><a href="#排序" class="headerlink" title="排序"></a>排序</h1><h2 id="时间复杂度、稳定性等"><a href="#时间复杂度、稳定性等" class="headerlink" title="时间复杂度、稳定性等"></a>时间复杂度、稳定性等</h2><table>
+<thead>
+<tr>
+<th>算法</th>
+<th>时间复杂度(平均)</th>
+<th>时间复杂度(最坏)</th>
+<th>时间复杂度(最好)</th>
+<th>空间复杂度</th>
+<th>稳定性</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>冒泡排序</td>
+<td>O(n^2)</td>
+<td>O(n^2)</td>
+<td>O(1)</td>
+<td>O(1)</td>
+<td>稳定</td>
+</tr>
+<tr>
+<td>选择排序</td>
+<td>O(n^2)</td>
+<td>O(n^2)</td>
+<td>O(n^2)</td>
+<td>O(1)</td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>插入排序</td>
+<td>O(n^2)</td>
+<td>O(n^2)</td>
+<td>O(n)</td>
+<td>O(1)</td>
+<td>稳定</td>
+</tr>
+<tr>
+<td>希尔排序</td>
+<td>O(n^1.3)</td>
+<td>O(n^2)</td>
+<td>O(n)</td>
+<td>O(1)</td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>堆排序</td>
+<td>O(nlogn)</td>
+<td>O(nlogn)</td>
+<td>O(nlogn)</td>
+<td>O(1)</td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>快速排序</td>
+<td>O(nlogn)</td>
+<td>O(n^2)</td>
+<td>O(nlogn)</td>
+<td>O(1)</td>
+<td>不稳定</td>
+</tr>
+<tr>
+<td>归并排序</td>
+<td>O(nlogn)</td>
+<td>O(nlogn)</td>
+<td>O(nlogn)</td>
+<td>O(n)</td>
+<td>稳定</td>
+</tr>
+</tbody>
+</table>
+<a id="more"></a>
+<h2 id="冒泡排序"><a href="#冒泡排序" class="headerlink" title="冒泡排序"></a>冒泡排序</h2><p>冒泡排序的原理是依次比较两个相邻的数，将较小的数放在前面，即每次的流程为，第一趟，比较第1个和第2个数，较小的放在前面，然后比较第2个和第3个，将较小的放在前面，直至最后两个元素。因此第一趟的过程的结果是将所有数中最大的那个数交换到了数组的最后一个位置。因此随后可以利用上述过程对除最后一个元素外的剩余元素进行排序，直到所有元素均有序。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">bubbleSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> end=data.size(); end&gt;<span class="number">0</span>; end--) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">1</span>; i&lt;end; i++) &#123;</span><br><span class="line">                <span class="keyword">if</span> (data[i] &lt; data[i<span class="number">-1</span>]) &#123;</span><br><span class="line">                    <span class="built_in">std</span>::swap(data[i], data[i<span class="number">-1</span>]);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="选择排序"><a href="#选择排序" class="headerlink" title="选择排序"></a>选择排序</h2><p>选择排序的原理是每次从待排序的记录中选择最大的元素再与待排序的最后一个元素进行交换，然后对剩余元素再进行选择排序，直到所有元素均有序。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">selectionSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> end=data.size()<span class="number">-1</span>; end&gt;<span class="number">0</span>; end--) &#123;</span><br><span class="line">        <span class="keyword">int</span> max = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">1</span>; i&lt;=end; i++) &#123;</span><br><span class="line">            <span class="keyword">if</span> (data[i]&gt;data[max]) &#123;</span><br><span class="line">                max = i;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="built_in">std</span>::swap(data[max],data[end]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="插入排序"><a href="#插入排序" class="headerlink" title="插入排序"></a>插入排序</h2><p>插入排序的原理是当仅有一个数字时必定是有序的，随后的过程中每次将一个新的元素插入已有序列中并保证这个序列是有序的，直到序列中的所有元素均是有序的。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">insertSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> current=<span class="number">1</span>,sz=data.size(); current&lt;sz; current++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=current; i&gt;<span class="number">0</span>; i--) &#123;</span><br><span class="line">            <span class="keyword">if</span> (data[i]&lt;data[i<span class="number">-1</span>]) &#123;</span><br><span class="line">                <span class="built_in">std</span>::swap(data[i], data[i<span class="number">-1</span>]);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="希尔排序"><a href="#希尔排序" class="headerlink" title="希尔排序"></a>希尔排序</h2><p>希尔排序其实也是插入排序，不过相比与简单插入排序，其效率会更好一点。其原理是将记录按照一定的下标的一定增量进行分组，然后对每组均使用插入排序进行排序，随着增量的减少，每组所包含的数据会逐渐增多，最后一次进行插入排序时增量为1，最后所有元素均有序。其思想是每次保证数据先较为有序的分布，从而减少随后的插入排序的时间。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">shellSortAux</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> gap)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> start=<span class="number">0</span>; start&lt;gap; start++) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> end=start+gap,sz=data.size(); end&lt;sz; end+=gap) &#123;</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> current=end; current&gt;start; current-=gap) &#123;</span><br><span class="line">                <span class="keyword">if</span> (data[current]&lt;data[current-gap]) &#123;</span><br><span class="line">                    <span class="built_in">std</span>::swap(data[current], data[current-gap]);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">shellSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> gap=data.size()/<span class="number">2</span>; gap&gt;=<span class="number">1</span>; gap/=<span class="number">2</span>) &#123;</span><br><span class="line">        shellSortAux(data, gap);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a>堆排序</h2><p>堆是一种特殊的完全二叉树，它的特点时其父节点比其两个子节点都要大。在利用堆进行排序时，每次均会取堆顶的元素，之后将堆顶的元素与最后一个元素进行交换，将堆的大小缩小1，之后由于堆顶元素进行了变更，因此可能违反了堆的性质，因此需要利用heapify来维护堆的性质，这样一直重复，知道堆的大小变为0，此时数组的内容即为有序的。</p>
+<p>heapify:该函数接受一个数组和一个下标，并假设该下标所代表根节点的左子树和右子树均为最大堆，但此时该下标所代表元素可能小于其子节点，此时需要将该节点的元素进行下降到合适的位置，从而使下标所指的树维持最大堆的性质。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">heapify</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> index, <span class="keyword">int</span> sz)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> current = index;</span><br><span class="line">    <span class="keyword">for</span> (; current&lt;sz;) &#123;</span><br><span class="line">        <span class="keyword">int</span> left = current*<span class="number">2</span>;</span><br><span class="line">        <span class="keyword">int</span> right = left+<span class="number">1</span>;</span><br><span class="line">        <span class="keyword">int</span> max = current;</span><br><span class="line">        <span class="keyword">if</span> (left&lt;sz &amp;&amp; data.at(left)&gt;data.at(max)) &#123;</span><br><span class="line">            max = left;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (right&lt;sz &amp;&amp; data.at(right)&gt;data.at(max)) &#123;</span><br><span class="line">            max = right;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (max == current) &#123;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">std</span>::swap(data.at(max), data.at(current));</span><br><span class="line">            current = max;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">buildHeap</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i=data.size()/<span class="number">2</span>; i&gt;<span class="number">0</span>; i--) &#123;</span><br><span class="line">        heapify(data, i, data.size());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">heapSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i=data.size()<span class="number">-1</span>; i&gt;<span class="number">1</span>; i--) &#123;</span><br><span class="line">        <span class="built_in">std</span>::swap(data.at(i), data.at(<span class="number">1</span>));</span><br><span class="line">        heapify(data, <span class="number">1</span>, i);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="快速排序"><a href="#快速排序" class="headerlink" title="快速排序"></a>快速排序</h2><p>快速排序的思想是每次选择一个元素作为枢纽值，将所有小于等于该枢纽的元素划到该元素左半边，大于等于该枢纽的元素划到该元素的右半边，然后分别对这两边分别递归调用快速排序，从而最终保证整个序列有序。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">partition</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> l, <span class="keyword">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> left = l;</span><br><span class="line">    <span class="keyword">int</span> right = r;</span><br><span class="line">    <span class="keyword">int</span> pivot = data.at(r);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (; left&lt;right; ) &#123;</span><br><span class="line">        <span class="keyword">for</span>(; left&lt;right &amp;&amp; data[left]&lt;=pivot; left++);</span><br><span class="line">        <span class="keyword">for</span>(; left&lt;right &amp;&amp; data[right]&gt;=pivot; right--);</span><br><span class="line"></span><br><span class="line">        <span class="built_in">std</span>::swap(data.at(left), data.at(right));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">std</span>::swap(data.at(r), data.at(left));</span><br><span class="line">    <span class="keyword">return</span> left;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">partition2</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> l, <span class="keyword">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> pivot = data[r];</span><br><span class="line">    <span class="keyword">int</span> pre = l<span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">int</span> cur = l;</span><br><span class="line">    <span class="keyword">for</span> (; cur&lt;r; cur++) &#123;</span><br><span class="line">        <span class="keyword">if</span> (data[cur] &lt;= pivot) &#123;</span><br><span class="line">            pre++;</span><br><span class="line">            <span class="built_in">std</span>::swap(data.at(pre), data.at(cur));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">std</span>::swap(data.at(pre+<span class="number">1</span>), data.at(r));</span><br><span class="line">    <span class="keyword">return</span> pre+<span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">quickSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> l, <span class="keyword">int</span> r)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (l &lt; r) &#123;</span><br><span class="line">        <span class="keyword">int</span> mid = partition(data, l, r);</span><br><span class="line">        quickSort(data, l, mid<span class="number">-1</span>);</span><br><span class="line">        quickSort(data, mid+<span class="number">1</span>, r);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="归并排序"><a href="#归并排序" class="headerlink" title="归并排序"></a>归并排序</h2><p>归并排序使用的是分治思想，通过将问题分解为多个范围更小但形式相同的问题进行求解，在求解完子问题后再将问题求解的结果进行合并获取整个问题的解。归并排序每次将数据分为两个子数组，首先利用归并排序将两个子数组排列至有序，之后将两个有序的子数组利用归并来合并为一个有序的数组，如果两个子数组的大小为0或1时则数组自然有序。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">merge</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> l, <span class="keyword">int</span> mid, <span class="keyword">int</span> r, <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; buffer)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> l1 = l;</span><br><span class="line">    <span class="keyword">int</span> l2 = mid+<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> cur = l;</span><br><span class="line">    <span class="keyword">for</span> (; l1&lt;=mid || l2&lt;=r; cur++) &#123;</span><br><span class="line">        <span class="keyword">int</span> * pcur = <span class="literal">nullptr</span>;</span><br><span class="line">        <span class="keyword">if</span> (l1 &gt; mid) &#123;</span><br><span class="line">            pcur = &amp;l2;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (l2 &gt; r) &#123;</span><br><span class="line">            pcur = &amp;l1;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            pcur = (data.at(l1)&lt;data.at(l2) ? &amp;l1:&amp;l2);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        buffer.at(cur) = data.at(*pcur);</span><br><span class="line">        (*pcur)++;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i=l; i&lt;=r; i++) &#123;</span><br><span class="line">        data[i] = buffer[i];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">mergeSort</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; data, <span class="keyword">int</span> l, <span class="keyword">int</span> r, <span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; &amp; buffer)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (l &lt; r) &#123;</span><br><span class="line">        <span class="keyword">int</span> mid = (l+r)/<span class="number">2</span>;</span><br><span class="line">        mergeSort(data, l, mid, buffer);</span><br><span class="line">        mergeSort(data, mid+<span class="number">1</span>, r, buffer);</span><br><span class="line">        merge(data, l, mid, r, buffer);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="链表的排序"><a href="#链表的排序" class="headerlink" title="链表的排序"></a>链表的排序</h2><p>链表的插入排序：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ListNode* <span class="title">linkedListInsertionSort</span><span class="params">(ListNode * head)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (ListNode * current=head; current!=<span class="literal">NULL</span>; current=current-&gt;next) &#123;</span><br><span class="line">        <span class="keyword">int</span> lastValue = current-&gt;val;</span><br><span class="line">        <span class="keyword">for</span> (ListNode * i=head; i!=current; i=i-&gt;next) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i-&gt;val &gt;= current-&gt;val) &#123;</span><br><span class="line">                <span class="built_in">std</span>::swap(i-&gt;val, lastValue);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        current-&gt;val = lastValue;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> head;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>链表的归并排序：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ListNode * <span class="title">merge</span><span class="params">(ListNode * lhs, ListNode * rhs)</span> </span>&#123;</span><br><span class="line">    ListNode * tail = <span class="literal">NULL</span>;</span><br><span class="line">    ListNode * head = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">for</span> (; lhs != <span class="literal">NULL</span> &amp;&amp; rhs != <span class="literal">NULL</span>; ) &#123;</span><br><span class="line">        ListNode * &amp; current = (lhs-&gt;val &lt; rhs-&gt;val ? lhs:rhs);</span><br><span class="line">        <span class="keyword">if</span> (tail == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            tail = current;</span><br><span class="line">            head = current;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            tail-&gt;next = current;</span><br><span class="line">            tail = current;</span><br><span class="line">        &#125;</span><br><span class="line">        current = current-&gt;next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ListNode * remain = (lhs == <span class="literal">NULL</span> ? rhs:lhs);</span><br><span class="line">    <span class="keyword">if</span> (remain != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (tail == <span class="literal">NULL</span>) &#123;</span><br><span class="line">            head = remain;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            tail-&gt;next = remain;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> head;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">ListNode * <span class="title">linkedListMergeSort</span><span class="params">(ListNode * head)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (head == <span class="literal">NULL</span> || head-&gt;next == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> head;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ListNode * slow = head;</span><br><span class="line">    ListNode * fast = head;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (; fast-&gt;next != <span class="literal">NULL</span> &amp;&amp; fast-&gt;next-&gt;next != <span class="literal">NULL</span>;) &#123;</span><br><span class="line">        fast = fast-&gt;next-&gt;next;</span><br><span class="line">        slow = slow-&gt;next;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    ListNode * r = linkedListMergeSort(slow-&gt;next);</span><br><span class="line">    slow-&gt;next = <span class="literal">NULL</span>;</span><br><span class="line">    ListNode * l = linkedListMergeSort(head);</span><br><span class="line">    <span class="keyword">return</span> merge(l, r);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>链表的快速排序：这里使用的Partition函数仅需单向遍历链表</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ListNode * <span class="title">partition</span><span class="params">(ListNode * begin, ListNode * end)</span> </span>&#123;</span><br><span class="line">    ListNode * prev = begin;</span><br><span class="line">    <span class="keyword">int</span> pivot = begin-&gt;val;</span><br><span class="line">    <span class="keyword">for</span> (ListNode * current=begin-&gt;next; current!=end; current=current-&gt;next) &#123;</span><br><span class="line">        <span class="keyword">if</span> (current-&gt;val &lt; pivot) &#123;</span><br><span class="line">            prev = prev-&gt;next;</span><br><span class="line">            <span class="built_in">std</span>::swap(prev-&gt;val, current-&gt;val);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">std</span>::swap(prev-&gt;val, begin-&gt;val);</span><br><span class="line">    <span class="keyword">return</span> prev;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// [)</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">linkedListQuickSortAux</span><span class="params">(ListNode * begin, ListNode * end)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (begin == end) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ListNode * mid = partition(begin, end);</span><br><span class="line">    linkedListQuickSortAux(begin, mid);</span><br><span class="line">    linkedListQuickSortAux(mid-&gt;next, end);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function">ListNode * <span class="title">linkedListQuickSort</span><span class="params">(ListNode * head)</span> </span>&#123;</span><br><span class="line">    linkedListQuickSortAux(head, <span class="literal">NULL</span>);</span><br><span class="line">    <span class="keyword">return</span> head;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p><a href="https://www.cnblogs.com/onepixel/articles/7674659.html" target="_blank" rel="noopener">https://www.cnblogs.com/onepixel/articles/7674659.html</a><br><a href="https://www.cnblogs.com/TenosDoIt/p/3666585.html" target="_blank" rel="noopener">https://www.cnblogs.com/TenosDoIt/p/3666585.html</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Algorithm/" rel="tag"># Algorithm</a>
+          
+            <a href="/tags/Sort/" rel="tag"># Sort</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/24/由源代码到可执行文件/" rel="next" title="从源代码到可执行文件">
+                <i class="fa fa-chevron-left"></i> 从源代码到可执行文件
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#排序"><span class="nav-number">1.</span> <span class="nav-text">排序</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#时间复杂度、稳定性等"><span class="nav-number">1.1.</span> <span class="nav-text">时间复杂度、稳定性等</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#冒泡排序"><span class="nav-number">1.2.</span> <span class="nav-text">冒泡排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#选择排序"><span class="nav-number">1.3.</span> <span class="nav-text">选择排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#插入排序"><span class="nav-number">1.4.</span> <span class="nav-text">插入排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#希尔排序"><span class="nav-number">1.5.</span> <span class="nav-text">希尔排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#堆排序"><span class="nav-number">1.6.</span> <span class="nav-text">堆排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#快速排序"><span class="nav-number">1.7.</span> <span class="nav-text">快速排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#归并排序"><span class="nav-number">1.8.</span> <span class="nav-text">归并排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链表的排序"><span class="nav-number">1.9.</span> <span class="nav-text">链表的排序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用"><span class="nav-number">1.10.</span> <span class="nav-text">引用</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
