@@ -108,25 +108,25 @@
 
 
 
-  <meta name="description" content="由源代码到可执行文件简介C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。">
-<meta name="keywords" content="CPP">
+  <meta name="description" content="进程调度简介由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：  所有系统 公平：给每个进程公平的CPU份额 策略强制执行：满足不同系统的实际需求的策略 平衡：保持系统的不同部分忙碌   批处理系统 吞吐量：单位时间作业数 周转时间：从提交到完成所花费的时间数 CPU利用率：保持CPU始终忙碌">
+<meta name="keywords" content="Operating System,Schedule">
 <meta property="og:type" content="article">
-<meta property="og:title" content="从源代码到可执行文件">
-<meta property="og:url" content="https://linkwk7.github.io/2018/10/24/由源代码到可执行文件/index.html">
+<meta property="og:title" content="进程调度">
+<meta property="og:url" content="https://linkwk7.github.io/2018/10/25/进程调度/index.html">
 <meta property="og:site_name" content="Linkwk7">
-<meta property="og:description" content="由源代码到可执行文件简介C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。">
+<meta property="og:description" content="进程调度简介由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：  所有系统 公平：给每个进程公平的CPU份额 策略强制执行：满足不同系统的实际需求的策略 平衡：保持系统的不同部分忙碌   批处理系统 吞吐量：单位时间作业数 周转时间：从提交到完成所花费的时间数 CPU利用率：保持CPU始终忙碌">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-10-24T08:08:57.756Z">
+<meta property="og:updated_time" content="2018-10-25T10:18:51.638Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="从源代码到可执行文件">
-<meta name="twitter:description" content="由源代码到可执行文件简介C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。">
+<meta name="twitter:title" content="进程调度">
+<meta name="twitter:description" content="进程调度简介由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：  所有系统 公平：给每个进程公平的CPU份额 策略强制执行：满足不同系统的实际需求的策略 平衡：保持系统的不同部分忙碌   批处理系统 吞吐量：单位时间作业数 周转时间：从提交到完成所花费的时间数 CPU利用率：保持CPU始终忙碌">
 
 
 
 
 
 
-  <link rel="canonical" href="https://linkwk7.github.io/2018/10/24/由源代码到可执行文件/"/>
+  <link rel="canonical" href="https://linkwk7.github.io/2018/10/25/进程调度/"/>
 
 
 
@@ -136,7 +136,7 @@
   };
 </script>
 
-  <title>从源代码到可执行文件 | Linkwk7</title>
+  <title>进程调度 | Linkwk7</title>
   
 
 
@@ -305,7 +305,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/24/由源代码到可执行文件/">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/25/进程调度/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Linkwk7">
@@ -322,7 +322,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">从源代码到可执行文件
+          <h1 class="post-title" itemprop="name headline">进程调度
               
             
           </h1>
@@ -347,7 +347,7 @@
                 
               
 
-              <time title="Created: 2018-10-24 16:06:53 / Modified: 16:08:57" itemprop="dateCreated datePublished" datetime="2018-10-24T16:06:53+08:00">2018-10-24</time>
+              <time title="Created: 2018-10-25 18:16:36 / Modified: 18:18:51" itemprop="dateCreated datePublished" datetime="2018-10-25T18:16:36+08:00">2018-10-25</time>
             
 
             
@@ -376,7 +376,7 @@
                   , 
                 
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/CPP/" itemprop="url" rel="index"><span itemprop="name">CPP</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Operating-System/" itemprop="url" rel="index"><span itemprop="name">Operating System</span></a></span>
 
                 
                 
@@ -410,28 +410,46 @@
       
 
       
-        <h1 id="由源代码到可执行文件"><a href="#由源代码到可执行文件" class="headerlink" title="由源代码到可执行文件"></a>由源代码到可执行文件</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。</p>
+        <h1 id="进程调度"><a href="#进程调度" class="headerlink" title="进程调度"></a>进程调度</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：</p>
+<ul>
+<li>所有系统<ul>
+<li>公平：给每个进程公平的CPU份额</li>
+<li>策略强制执行：满足不同系统的实际需求的策略</li>
+<li>平衡：保持系统的不同部分忙碌</li>
+</ul>
+</li>
+<li>批处理系统<ul>
+<li>吞吐量：单位时间作业数</li>
+<li>周转时间：从提交到完成所花费的时间数</li>
+<li>CPU利用率：保持CPU始终忙碌</li>
+</ul>
+</li>
+<li>交互式系统<ul>
+<li>响应时间：快速的响应请求</li>
+<li>均衡性：满足用户需求</li>
+</ul>
+</li>
+<li>实时系统<ul>
+<li>满足截至时间</li>
+<li>可预测性</li>
+</ul>
+</li>
+</ul>
 <a id="more"></a>
-<h2 id="预编译"><a href="#预编译" class="headerlink" title="预编译"></a>预编译</h2><p>在预编译过程中主要处理代码文件中的以#开始的指令，如#include或者#define之类的。在预处理阶段会执行以下操作：</p>
+<h2 id="先来先服务-FCFS"><a href="#先来先服务-FCFS" class="headerlink" title="先来先服务(FCFS)"></a>先来先服务(FCFS)</h2><p>非抢占式的先来先服务调度算法按照所有进程请求CPU的顺序来使用CPU，每个进程在获得CPU后会一直执行直到完成任务。但假设如下情况，一个需要耗时一小时任务先请求CPU，但剩余1000个任务仅需1秒即可完成，但由于较长的任务先请求CPU因此会先被执行，导致平均周转时间较长。</p>
+<h2 id="短作业优先"><a href="#短作业优先" class="headerlink" title="短作业优先"></a>短作业优先</h2><p>如果已知各个作业完成所需要的时间则可以利用短作业优先算法，该算法是非抢占式的，每次会从所有等待CPU的进程中选择需要时间最短的任务来运行，但该算法可能会导致运行时间较长的任务饥饿。</p>
+<h2 id="最短剩余时间优先"><a href="#最短剩余时间优先" class="headerlink" title="最短剩余时间优先"></a>最短剩余时间优先</h2><p>最短剩余时间优先是短作业优先的抢占式版本，调度程序会根据当前正在运行的任务和所有请求运行的任务的需要执行的时间来进行调度，从中选择剩余运行时间最短的一个来运行，如果剩余时间最短的那个不是当前正在运行的任务则将当前任务挂起，切换至剩余时间最短的任务运行。该方法能够使新的短作业获得较好的服务。</p>
+<h2 id="轮转调度"><a href="#轮转调度" class="headerlink" title="轮转调度"></a>轮转调度</h2><p>每个进程都被分配一个时间段并称为时间片，每个进程仅能在该时间段内运行，如果时间片结束时该进程仍旧没有运行完成则剥夺CPU并将CPU分配给另一个进程。如果该进程在时间片结束前阻塞或结束则立刻进行切换。</p>
+<h2 id="优先级调度"><a href="#优先级调度" class="headerlink" title="优先级调度"></a>优先级调度</h2><p>每次从所有进程中选择优先级最高的一个运行。为了防止高优先级的进程毫无止境的运行下去，可以每隔一段时间降低该进程的优先级，如果某一次优先级的降低导致了次高优先级的进程优先级比正在运行的进程的优先级高则进行切换。</p>
+<h2 id="多级队列"><a href="#多级队列" class="headerlink" title="多级队列"></a>多级队列</h2><p>假设有N个队列（Q1,Q2….QN），其中各个队列中的作业(进程)的优先级都是不一样的。假设优先级Priority(Q1) &gt; Priority(Q2) &gt; … &gt; Priority(QN)。对于某个特定的队列来说，遵循的依旧是时间片轮转法。也就是说，每个队列中的任务运行时的时间片长度与队列相关。而且各个队列的时间片是随着优先级的增加而减少的，也就是说，优先级越高的队列中它的时间片就越短。</p>
+<p>多级队列调度算法流程如下：</p>
 <ul>
-<li>删除所有的#define，展开所有的宏定义</li>
-<li>处理所有的条件预编译指令，如#ifdef，#if等</li>
-<li>删除所有的注释</li>
-<li>添加行号和文件名标识，从而让编译时能够产生合适的编译错误和警告信息</li>
-<li>保留所有#pragma指令，因为这些指令会执导编译器的执行</li>
+<li>进程在进入待调度的队列等待时，首先进入优先级最高的Q1等待。</li>
+<li>首先调度优先级高的队列中的进程。若高优先级中队列中已没有调度的进程，则调度次优先级队列中的进程。例如：Q1,Q2,Q3三个队列，只有在Q1中没有进程等待时才去调度Q2，同理，只有Q1,Q2都为空时才会去调度Q3。</li>
+<li>对于同一个队列中的各个进程，按照时间片轮转法调度。比如Q1队列的时间片为N，那么Q1中的作业在经历了N个时间后若还没有完成，则进入Q2队列等待，若Q2的时间片用完后作业还不能完成，一直进入下一级队列，直至完成。</li>
+<li>在低优先级的队列中的进程在运行时，又有新到达的作业，那么在运行完这个时间片后，CPU马上分配给新到达的作业（抢占式）</li>
 </ul>
-<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>编译过程会将预处理完成的文件进行词法分析、语法分析、语义分析并在进行相应的优化后产生对应的汇编代码文件。</p>
-<ul>
-<li>词法分析：该过程对源代码进行扫描，并将其中的字符序列分割为一系列记号</li>
-<li>语法分析：针对词法分析扫描得到的记号进行语法分析，产生语法树，语法树是一种以表达式为节点的树</li>
-<li>语义分析：对语法树进行分析，来判断其代表的表达式是否有意义</li>
-<li>优化：将语法树转换为中间代码</li>
-<li>目标代码生成：有代码生成器将中间代码转换为目标机器代码</li>
-<li>目标代码优化：对生成的目标机器代码进行优化</li>
-</ul>
-<h2 id="汇编"><a href="#汇编" class="headerlink" title="汇编"></a>汇编</h2><p>将汇编代码转换为机器可以执行的指令，最终生成目标文件。在生成的目标文件中除了自己的数据和机器指令外还要包含至少三张表，未解决符号表、导出符号表和地址重定向表，这三张表用于告诉连接器自己需要什么符号、自己可以提供什么符号以及本编译单元对自身地址引用的记录。</p>
-<h2 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h2><p>链接过程会将生成的目标文件组合为一个可执行文件。由于某个目标文件可能引用其他目标文件中的某个符号，例如函数或者变量等，因此需要链接器来解决这些符号的解析。链接可以大致分为两种，第一种是静态链接：在这种链接方式下，函数的代码将从其所在的静态链接库中拷贝到最终的可执行程序中，这样程序在执行时会将这些代码装载进内存中；另一种是动态链接：这种情况下函数的代码被放到某个动态链接库中，链接程序在进行动态链接时仅会记录需要的共享的动态链接库的部分信息，在执行时动态链接库的内容将映射到相应进程的内存空间中，动态链接程序会根据可执行程序中记录的信息找到相应的函数调用入口。</p>
-<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p><a href="http://www.cnblogs.com/hongfenglee/archive/2012/02/18/2356808.html" target="_blank" rel="noopener">http://www.cnblogs.com/hongfenglee/archive/2012/02/18/2356808.html</a></p>
+<h2 id="彩票调度"><a href="#彩票调度" class="headerlink" title="彩票调度"></a>彩票调度</h2><p>彩票调度算法，每个待运行的进程分配一张彩票，每次需要调度的时候，随机抽取一张已分配的彩票，中奖的进程获得CPU，因此如果是优先级比较高的进程可以多为其分配一些彩票，来提升其得到CPU的概率。</p>
 
       
     </div>
@@ -452,7 +470,9 @@
       
         <div class="post-tags">
           
-            <a href="/tags/CPP/" rel="tag"># CPP</a>
+            <a href="/tags/Operating-System/" rel="tag"># Operating System</a>
+          
+            <a href="/tags/Schedule/" rel="tag"># Schedule</a>
           
         </div>
       
@@ -465,8 +485,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/10/06/raft/" rel="next" title="Raft">
-                <i class="fa fa-chevron-left"></i> Raft
+              <a href="/2018/10/24/Sort/" rel="next" title="Sort">
+                <i class="fa fa-chevron-left"></i> Sort
               </a>
             
           </div>
@@ -475,8 +495,8 @@
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/10/24/Sort/" rel="prev" title="Sort">
-                Sort <i class="fa fa-chevron-right"></i>
+              <a href="/2018/10/25/内存管理/" rel="prev" title="内存管理">
+                内存管理 <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -660,7 +680,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#由源代码到可执行文件"><span class="nav-number">1.</span> <span class="nav-text">由源代码到可执行文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#预编译"><span class="nav-number">1.2.</span> <span class="nav-text">预编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译"><span class="nav-number">1.3.</span> <span class="nav-text">编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#汇编"><span class="nav-number">1.4.</span> <span class="nav-text">汇编</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链接"><span class="nav-number">1.5.</span> <span class="nav-text">链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用"><span class="nav-number">1.6.</span> <span class="nav-text">引用</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#进程调度"><span class="nav-number">1.</span> <span class="nav-text">进程调度</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先来先服务-FCFS"><span class="nav-number">1.2.</span> <span class="nav-text">先来先服务(FCFS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#短作业优先"><span class="nav-number">1.3.</span> <span class="nav-text">短作业优先</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最短剩余时间优先"><span class="nav-number">1.4.</span> <span class="nav-text">最短剩余时间优先</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#轮转调度"><span class="nav-number">1.5.</span> <span class="nav-text">轮转调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优先级调度"><span class="nav-number">1.6.</span> <span class="nav-text">优先级调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多级队列"><span class="nav-number">1.7.</span> <span class="nav-text">多级队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#彩票调度"><span class="nav-number">1.8.</span> <span class="nav-text">彩票调度</span></a></li></ol></li></ol></div>
             
 
           </div>

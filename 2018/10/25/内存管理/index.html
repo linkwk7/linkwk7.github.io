@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="存储管理存储器抽象操作系统需要为底层的硬件资源提供一种抽象，从而向上层隐藏底层实现细节，并便于上层软件的开发。 不抽象而对存储器的最简单的抽象就是不进行抽象，每个程序可以直接访问内存，不同进程由于使用的是同一个地址空间，因此可以访问和修改其他进程甚至操作系统的数据。在这种抽象的情况下，如果需要运行多个进程可以利用交换技术，每次需要运行其他进程时会先将当前进程的数据保存到磁盘，然后调入其他进程；或者">
+<meta name="keywords" content="Operating System,Memory Management">
+<meta property="og:type" content="article">
+<meta property="og:title" content="内存管理">
+<meta property="og:url" content="https://linkwk7.github.io/2018/10/25/内存管理/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="存储管理存储器抽象操作系统需要为底层的硬件资源提供一种抽象，从而向上层隐藏底层实现细节，并便于上层软件的开发。 不抽象而对存储器的最简单的抽象就是不进行抽象，每个程序可以直接访问内存，不同进程由于使用的是同一个地址空间，因此可以访问和修改其他进程甚至操作系统的数据。在这种抽象的情况下，如果需要运行多个进程可以利用交换技术，每次需要运行其他进程时会先将当前进程的数据保存到磁盘，然后调入其他进程；或者">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://linkwk7.github.io/2018/10/25/内存管理/page-flow.jpg">
+<meta property="og:updated_time" content="2018-10-25T10:27:13.431Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="内存管理">
+<meta name="twitter:description" content="存储管理存储器抽象操作系统需要为底层的硬件资源提供一种抽象，从而向上层隐藏底层实现细节，并便于上层软件的开发。 不抽象而对存储器的最简单的抽象就是不进行抽象，每个程序可以直接访问内存，不同进程由于使用的是同一个地址空间，因此可以访问和修改其他进程甚至操作系统的数据。在这种抽象的情况下，如果需要运行多个进程可以利用交换技术，每次需要运行其他进程时会先将当前进程的数据保存到磁盘，然后调入其他进程；或者">
+<meta name="twitter:image" content="https://linkwk7.github.io/2018/10/25/内存管理/page-flow.jpg">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/10/25/内存管理/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>内存管理 | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/25/内存管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">内存管理
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-25 18:21:06 / Modified: 18:27:13" itemprop="dateCreated datePublished" datetime="2018-10-25T18:21:06+08:00">2018-10-25</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Operating-System/" itemprop="url" rel="index"><span itemprop="name">Operating System</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="存储管理"><a href="#存储管理" class="headerlink" title="存储管理"></a>存储管理</h1><h2 id="存储器抽象"><a href="#存储器抽象" class="headerlink" title="存储器抽象"></a>存储器抽象</h2><p>操作系统需要为底层的硬件资源提供一种抽象，从而向上层隐藏底层实现细节，并便于上层软件的开发。</p>
+<h3 id="不抽象"><a href="#不抽象" class="headerlink" title="不抽象"></a>不抽象</h3><p>而对存储器的最简单的抽象就是不进行抽象，每个程序可以直接访问内存，不同进程由于使用的是同一个地址空间，因此可以访问和修改其他进程甚至操作系统的数据。在这种抽象的情况下，如果需要运行多个进程可以利用交换技术，每次需要运行其他进程时会先将当前进程的数据保存到磁盘，然后调入其他进程；或者可以将地址空间进行划分，每个进程使用不同的地址空间来支持多个进程的运行。</p>
+<h3 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h3><p>由于直接使用物理内存空间作为存储器抽象没有为上层软件开发提供一个足够好的环境，因此人们开始将物理内存抽象为地址空间。由于地址空间是每个内存可用于寻址的一系列地址的集合，因此需要将为每个进程划分一个自己的地址空间，一个方法是使用基址寄存器和界限寄存器，其中基址寄存器用于保存该进程地址空间的0地址在物理地址空间的位置，而界限寄存器用于保留程序的长度。因此程序需要装载到内存中连续的地址中，而每次进程访问内存、取指或者读写数据时CPU会在将地址发送到内存的总线前加上基址，同时监测偏移是否超过了界限寄存器。使用基址寄存器和界限寄存器可以非常方便的为每个进程提供私有的地址空间，但是由于每次访问内存都需要进行加法和比较运算因此会带来一定的额外负担，而且要求每次将程序装载到连续的内存空间中。</p>
+<a id="more"></a>
+<h2 id="交换和虚拟内存"><a href="#交换和虚拟内存" class="headerlink" title="交换和虚拟内存"></a>交换和虚拟内存</h2><h3 id="交换技术"><a href="#交换技术" class="headerlink" title="交换技术"></a>交换技术</h3><p>内存空间如果不够了可以使用交换技术或者虚拟内存技术来解决该问题。交换技术通过将一个进程完整的调入内存，在运行一段时间后再存回磁盘。</p>
+<h3 id="虚拟内存"><a href="#虚拟内存" class="headerlink" title="虚拟内存"></a>虚拟内存</h3><p>虽然存储器的容量在快速的增长，但仍然赶不上软件的需求，软件可能需要访问超过物理内存大小的地址空间，因此人们提出了虚拟内存，该技术的思想是每个程序拥有自己的地址空间，该空间被分割为多个块，每个块有连续的地址空间，这些块会被动态的映射到物理内存，程序在执行时不需要整个地址空间的内容都被调入物理内存中。在使用虚拟内存后程序访问内存的流程如下：</p>
+<ul>
+<li>程序给定需要访问的地址(虚拟地址)</li>
+<li>虚拟地址发送给内存管理单元(MMU)</li>
+<li>内存管理单元将虚拟地址映射为物理地址</li>
+<li>利用物理地址访问内存</li>
+</ul>
+<p>而在上述过程中根据如何划分进程的虚拟地址空间又可细分为三类：页式、段式、段页式。</p>
+<h3 id="分页存储管理"><a href="#分页存储管理" class="headerlink" title="分页存储管理"></a>分页存储管理</h3><p>使用分页存储管理时会将用户程序的地址空间划分为若干个大小相同的块，称为页，同时物理内存也被划分为多个大小相同的物理块，称为页框，其中页的大小与页框的大小相同。程序所使用的虚拟地址会被划分为两部分，前半部分为页号，后半部分为业内偏移，而MMU会将页号转换为存储相应页的物理内存的块号，其具体流程如下：</p>
+<ul>
+<li>根据虚拟地址(逻辑地址)计算页号和页内偏移</li>
+<li>比较页号与页表长度，查看是否应当产生越界中断</li>
+<li>检索快表(TLB)，如果命中则组合处物理地址</li>
+<li>利用页表寄存器中的内容计算对应页号所对应页表项的地址，并将对应条目存入TLB中，如果该页面尚未调入内存则还会产生缺页中断</li>
+<li>利用对应的页表项获取块号，并将块号与业内偏移组合为物理地址</li>
+</ul>
+<p><img src="/2018/10/25/内存管理/page-flow.jpg" alt="虚拟地址翻译流程"></p>
+<h3 id="分段存储管理"><a href="#分段存储管理" class="headerlink" title="分段存储管理"></a>分段存储管理</h3><p>页面是主存物理空间中划分出来的等长的固定区域。分页方式的优点是页长固定，因而便于管理。但分页方式的缺点是页长与程序的逻辑大小无关。因此可以将虚拟内存空间划分为多个段，每个段是按照程序用途划分的可以动态改变长度的区域。在访问内存时与分页式管理相似，首先查找段表获得对应段在内存中的起始地址，然后与偏移一起组合为物理内存的地址。</p>
+<h3 id="段页式存储管理"><a href="#段页式存储管理" class="headerlink" title="段页式存储管理"></a>段页式存储管理</h3><p>由于页式内存管理能够提高内存利用率，段式内存管理能够反映程序的逻辑结构并利于段的共享，因此二者可以相结合为段页式内存管理。在段页式内存管理中，虚拟内存空间首先被划分为多个段，每个段再划分为多个固定大小的页，因此在使用段页式内存管理时每个段都会有一张页表，需要访问内存时会先将地址分为段号、页号和页内偏移，首先利用段号找到对应页表，再用页号查找对应的物理块的地址，最后和页内偏移组合为物理地址。</p>
+<h2 id="页面置换算法"><a href="#页面置换算法" class="headerlink" title="页面置换算法"></a>页面置换算法</h2><p>在程序运行时，如果其需要访问的页面不在内存中则需要将其调入内存，如果内存已满则需要选择一个页面调换至磁盘，选择调出页面的算法即为页面置换算法。</p>
+<h3 id="最佳置换算法"><a href="#最佳置换算法" class="headerlink" title="最佳置换算法"></a>最佳置换算法</h3><p>最佳置换算法选择的是之后最长时间内不会被使用的页面，因此可以保证缺页率最低，但是由于人们目前无法预知未来，因此该算法无法实现。</p>
+<h3 id="FIFO算法"><a href="#FIFO算法" class="headerlink" title="FIFO算法"></a>FIFO算法</h3><p>该算法选择最早进入内存的页面，但是可能由于某些页面经常被访问，因此可能带来缺页率的上升。</p>
+<h3 id="第二次机会算法"><a href="#第二次机会算法" class="headerlink" title="第二次机会算法"></a>第二次机会算法</h3><p>该算法是对FIFO的一个改进算法，由于FIFO可能将经常使用的页面置换出去，因此可以为每个页面加上一个访问标记，如果FIFO算法发现下一次要置换的页面最近被访问过则将该访问标记清楚然后置于FIFO队列的尾端。</p>
+<h3 id="时钟页面置换算法"><a href="#时钟页面置换算法" class="headerlink" title="时钟页面置换算法"></a>时钟页面置换算法</h3><p>由于第二次机会算法需要将页面在链表中不断一定，因此降低了效率，因此可以进一步改进，将所有页面连接成一个链表，有一个指针指向最老的页面，每次发生缺页中断时会将指针移动一位，如果该页面未被访问则将该页换出，如果该页已经被访问则清空访问位，然后移动至下一个页面。</p>
+<h3 id="最近未使用-NRU-算法"><a href="#最近未使用-NRU-算法" class="headerlink" title="最近未使用(NRU)算法"></a>最近未使用(NRU)算法</h3><p>为每个页面加上两个状态位，一个用于标识该页面最近被访问过，另一个用于标识该页面已经被修改了。在刚开始时所有页面都标记为未被访问，未被修改，访问位会定期被清除。当发生缺页中断时所有页面可分为四类：1)未被访问、未被修改2)未被访问、被修改3)被访问、未被修改4)被访问、被修改，每次NRU都会从类号最小的的类中挑选一个淘汰。</p>
+<h3 id="最近最少使用-LRU-算法"><a href="#最近最少使用-LRU-算法" class="headerlink" title="最近最少使用(LRU)算法"></a>最近最少使用(LRU)算法</h3><p>该算法选择最长时间没有使用的页面调出内存，因为某一页面如果在过去很久都没有被访问，那么之后可能页不会被访问。但该方法实现较为复杂，因为需要每次维护一个所有页面的链表，最近最多使用的在表头，最近最少使用的在表尾，每次访问时需要在链表中找到一个页面，然后将其移动到表头。</p>
+<h3 id="最不常用-NFU-算法"><a href="#最不常用-NFU-算法" class="headerlink" title="最不常用(NFU)算法"></a>最不常用(NFU)算法</h3><p>每个页面关联到一个计数器，每次隔一段时间将计数器右移一位，然后将当前的访问位(0/1)加到计数器上。每次置换时选择计数器最小的页面。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://blog.csdn.net/yongchaocsdn/article/details/78533097" target="_blank" rel="noopener">https://blog.csdn.net/yongchaocsdn/article/details/78533097</a><br><a href="https://blog.csdn.net/zhongyangtony/article/details/80879425" target="_blank" rel="noopener">https://blog.csdn.net/zhongyangtony/article/details/80879425</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Operating-System/" rel="tag"># Operating System</a>
+          
+            <a href="/tags/Memory-Management/" rel="tag"># Memory Management</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/25/进程调度/" rel="next" title="进程调度">
+                <i class="fa fa-chevron-left"></i> 进程调度
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">9</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">8</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#存储管理"><span class="nav-number">1.</span> <span class="nav-text">存储管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#存储器抽象"><span class="nav-number">1.1.</span> <span class="nav-text">存储器抽象</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#不抽象"><span class="nav-number">1.1.1.</span> <span class="nav-text">不抽象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#地址空间"><span class="nav-number">1.1.2.</span> <span class="nav-text">地址空间</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#交换和虚拟内存"><span class="nav-number">1.2.</span> <span class="nav-text">交换和虚拟内存</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#交换技术"><span class="nav-number">1.2.1.</span> <span class="nav-text">交换技术</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#虚拟内存"><span class="nav-number">1.2.2.</span> <span class="nav-text">虚拟内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分页存储管理"><span class="nav-number">1.2.3.</span> <span class="nav-text">分页存储管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#分段存储管理"><span class="nav-number">1.2.4.</span> <span class="nav-text">分段存储管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#段页式存储管理"><span class="nav-number">1.2.5.</span> <span class="nav-text">段页式存储管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#页面置换算法"><span class="nav-number">1.3.</span> <span class="nav-text">页面置换算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#最佳置换算法"><span class="nav-number">1.3.1.</span> <span class="nav-text">最佳置换算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FIFO算法"><span class="nav-number">1.3.2.</span> <span class="nav-text">FIFO算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二次机会算法"><span class="nav-number">1.3.3.</span> <span class="nav-text">第二次机会算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#时钟页面置换算法"><span class="nav-number">1.3.4.</span> <span class="nav-text">时钟页面置换算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最近未使用-NRU-算法"><span class="nav-number">1.3.5.</span> <span class="nav-text">最近未使用(NRU)算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最近最少使用-LRU-算法"><span class="nav-number">1.3.6.</span> <span class="nav-text">最近最少使用(LRU)算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#最不常用-NFU-算法"><span class="nav-number">1.3.7.</span> <span class="nav-text">最不常用(NFU)算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">1.4.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -302,6 +302,370 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/25/内存管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/25/内存管理/" itemprop="url">
+                  内存管理
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-25 18:21:06 / Modified: 18:27:13" itemprop="dateCreated datePublished" datetime="2018-10-25T18:21:06+08:00">2018-10-25</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Operating-System/" itemprop="url" rel="index"><span itemprop="name">Operating System</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="存储管理"><a href="#存储管理" class="headerlink" title="存储管理"></a>存储管理</h1><h2 id="存储器抽象"><a href="#存储器抽象" class="headerlink" title="存储器抽象"></a>存储器抽象</h2><p>操作系统需要为底层的硬件资源提供一种抽象，从而向上层隐藏底层实现细节，并便于上层软件的开发。</p>
+<h3 id="不抽象"><a href="#不抽象" class="headerlink" title="不抽象"></a>不抽象</h3><p>而对存储器的最简单的抽象就是不进行抽象，每个程序可以直接访问内存，不同进程由于使用的是同一个地址空间，因此可以访问和修改其他进程甚至操作系统的数据。在这种抽象的情况下，如果需要运行多个进程可以利用交换技术，每次需要运行其他进程时会先将当前进程的数据保存到磁盘，然后调入其他进程；或者可以将地址空间进行划分，每个进程使用不同的地址空间来支持多个进程的运行。</p>
+<h3 id="地址空间"><a href="#地址空间" class="headerlink" title="地址空间"></a>地址空间</h3><p>由于直接使用物理内存空间作为存储器抽象没有为上层软件开发提供一个足够好的环境，因此人们开始将物理内存抽象为地址空间。由于地址空间是每个内存可用于寻址的一系列地址的集合，因此需要将为每个进程划分一个自己的地址空间，一个方法是使用基址寄存器和界限寄存器，其中基址寄存器用于保存该进程地址空间的0地址在物理地址空间的位置，而界限寄存器用于保留程序的长度。因此程序需要装载到内存中连续的地址中，而每次进程访问内存、取指或者读写数据时CPU会在将地址发送到内存的总线前加上基址，同时监测偏移是否超过了界限寄存器。使用基址寄存器和界限寄存器可以非常方便的为每个进程提供私有的地址空间，但是由于每次访问内存都需要进行加法和比较运算因此会带来一定的额外负担，而且要求每次将程序装载到连续的内存空间中。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/10/25/内存管理/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/25/进程调度/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/25/进程调度/" itemprop="url">
+                  进程调度
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-10-25 18:16:36 / Modified: 18:18:51" itemprop="dateCreated datePublished" datetime="2018-10-25T18:16:36+08:00">2018-10-25</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Operating-System/" itemprop="url" rel="index"><span itemprop="name">Operating System</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="进程调度"><a href="#进程调度" class="headerlink" title="进程调度"></a>进程调度</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：</p>
+<ul>
+<li>所有系统<ul>
+<li>公平：给每个进程公平的CPU份额</li>
+<li>策略强制执行：满足不同系统的实际需求的策略</li>
+<li>平衡：保持系统的不同部分忙碌</li>
+</ul>
+</li>
+<li>批处理系统<ul>
+<li>吞吐量：单位时间作业数</li>
+<li>周转时间：从提交到完成所花费的时间数</li>
+<li>CPU利用率：保持CPU始终忙碌</li>
+</ul>
+</li>
+<li>交互式系统<ul>
+<li>响应时间：快速的响应请求</li>
+<li>均衡性：满足用户需求</li>
+</ul>
+</li>
+<li>实时系统<ul>
+<li>满足截至时间</li>
+<li>可预测性</li>
+</ul>
+</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/10/25/进程调度/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/24/Sort/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1639,7 +2003,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">7</span>
+                    <span class="site-state-item-count">9</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -1666,7 +2030,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">7</span>
+                      
+                    
+                    <span class="site-state-item-count">8</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -1695,7 +2061,13 @@
                     
                       
                     
-                    <span class="site-state-item-count">8</span>
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>
