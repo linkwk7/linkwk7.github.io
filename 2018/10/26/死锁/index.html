@@ -108,25 +108,25 @@
 
 
 
-  <meta name="description" content="进程调度简介由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：  所有系统 公平：给每个进程公平的CPU份额 策略强制执行：满足不同系统的实际需求的策略 平衡：保持系统的不同部分忙碌   批处理系统 吞吐量：单位时间作业数 周转时间：从提交到完成所花费的时间数 CPU利用率：保持CPU始终忙碌">
-<meta name="keywords" content="Operating System,Schedule">
+  <meta name="description" content="死锁简介死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。 必要条件 互斥：每个资源要么已经分配给了一个进程要么是可用的 占有和等待：已经得到某种资源的进程可以继续请求其他资源 不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资">
+<meta name="keywords" content="Operating System">
 <meta property="og:type" content="article">
-<meta property="og:title" content="进程调度">
-<meta property="og:url" content="https://linkwk7.github.io/2018/10/25/进程调度/index.html">
+<meta property="og:title" content="死锁">
+<meta property="og:url" content="https://linkwk7.github.io/2018/10/26/死锁/index.html">
 <meta property="og:site_name" content="Linkwk7">
-<meta property="og:description" content="进程调度简介由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：  所有系统 公平：给每个进程公平的CPU份额 策略强制执行：满足不同系统的实际需求的策略 平衡：保持系统的不同部分忙碌   批处理系统 吞吐量：单位时间作业数 周转时间：从提交到完成所花费的时间数 CPU利用率：保持CPU始终忙碌">
+<meta property="og:description" content="死锁简介死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。 必要条件 互斥：每个资源要么已经分配给了一个进程要么是可用的 占有和等待：已经得到某种资源的进程可以继续请求其他资源 不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-10-25T10:18:51.638Z">
+<meta property="og:updated_time" content="2018-10-26T10:53:10.415Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="进程调度">
-<meta name="twitter:description" content="进程调度简介由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：  所有系统 公平：给每个进程公平的CPU份额 策略强制执行：满足不同系统的实际需求的策略 平衡：保持系统的不同部分忙碌   批处理系统 吞吐量：单位时间作业数 周转时间：从提交到完成所花费的时间数 CPU利用率：保持CPU始终忙碌">
+<meta name="twitter:title" content="死锁">
+<meta name="twitter:description" content="死锁简介死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。 必要条件 互斥：每个资源要么已经分配给了一个进程要么是可用的 占有和等待：已经得到某种资源的进程可以继续请求其他资源 不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资">
 
 
 
 
 
 
-  <link rel="canonical" href="https://linkwk7.github.io/2018/10/25/进程调度/"/>
+  <link rel="canonical" href="https://linkwk7.github.io/2018/10/26/死锁/"/>
 
 
 
@@ -136,7 +136,7 @@
   };
 </script>
 
-  <title>进程调度 | Linkwk7</title>
+  <title>死锁 | Linkwk7</title>
   
 
 
@@ -305,7 +305,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/25/进程调度/">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/26/死锁/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Linkwk7">
@@ -322,7 +322,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">进程调度
+          <h1 class="post-title" itemprop="name headline">死锁
               
             
           </h1>
@@ -347,7 +347,7 @@
                 
               
 
-              <time title="Created: 2018-10-25 18:16:36 / Modified: 18:18:51" itemprop="dateCreated datePublished" datetime="2018-10-25T18:16:36+08:00">2018-10-25</time>
+              <time title="Created: 2018-10-26 18:51:33 / Modified: 18:53:10" itemprop="dateCreated datePublished" datetime="2018-10-26T18:51:33+08:00">2018-10-26</time>
             
 
             
@@ -410,46 +410,20 @@
       
 
       
-        <h1 id="进程调度"><a href="#进程调度" class="headerlink" title="进程调度"></a>进程调度</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>由于可能有多个进程或线程在竞争CPU，因此需要从所有就绪的线程或进程中选择下一个运行的，完成该工作的程序即为调度程序。总的来说，调度算法应当满足以下目标：</p>
-<ul>
-<li>所有系统<ul>
-<li>公平：给每个进程公平的CPU份额</li>
-<li>策略强制执行：满足不同系统的实际需求的策略</li>
-<li>平衡：保持系统的不同部分忙碌</li>
-</ul>
-</li>
-<li>批处理系统<ul>
-<li>吞吐量：单位时间作业数</li>
-<li>周转时间：从提交到完成所花费的时间数</li>
-<li>CPU利用率：保持CPU始终忙碌</li>
-</ul>
-</li>
-<li>交互式系统<ul>
-<li>响应时间：快速的响应请求</li>
-<li>均衡性：满足用户需求</li>
-</ul>
-</li>
-<li>实时系统<ul>
-<li>满足截至时间</li>
-<li>可预测性</li>
-</ul>
-</li>
+        <h1 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。</p>
+<h2 id="必要条件"><a href="#必要条件" class="headerlink" title="必要条件"></a>必要条件</h2><ul>
+<li>互斥：每个资源要么已经分配给了一个进程要么是可用的</li>
+<li>占有和等待：已经得到某种资源的进程可以继续请求其他资源</li>
+<li>不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资源的进程主动释放资源</li>
+<li>环路等待：由两个或两个以上的进程形成一个环路，环路中每个进程都在等待下一个进程所拥有的资源</li>
 </ul>
 <a id="more"></a>
-<h2 id="先来先服务-FCFS"><a href="#先来先服务-FCFS" class="headerlink" title="先来先服务(FCFS)"></a>先来先服务(FCFS)</h2><p>非抢占式的先来先服务调度算法按照所有进程请求CPU的顺序来使用CPU，每个进程在获得CPU后会一直执行直到完成任务。但假设如下情况，一个需要耗时一小时任务先请求CPU，但剩余1000个任务仅需1秒即可完成，但由于较长的任务先请求CPU因此会先被执行，导致平均周转时间较长。</p>
-<h2 id="短作业优先"><a href="#短作业优先" class="headerlink" title="短作业优先"></a>短作业优先</h2><p>如果已知各个作业完成所需要的时间则可以利用短作业优先算法，该算法是非抢占式的，每次会从所有等待CPU的进程中选择需要时间最短的任务来运行，但该算法可能会导致运行时间较长的任务饥饿。</p>
-<h2 id="最短剩余时间优先"><a href="#最短剩余时间优先" class="headerlink" title="最短剩余时间优先"></a>最短剩余时间优先</h2><p>最短剩余时间优先是短作业优先的抢占式版本，调度程序会根据当前正在运行的任务和所有请求运行的任务的需要执行的时间来进行调度，从中选择剩余运行时间最短的一个来运行，如果剩余时间最短的那个不是当前正在运行的任务则将当前任务挂起，切换至剩余时间最短的任务运行。该方法能够使新的短作业获得较好的服务。</p>
-<h2 id="轮转调度"><a href="#轮转调度" class="headerlink" title="轮转调度"></a>轮转调度</h2><p>每个进程都被分配一个时间段并称为时间片，每个进程仅能在该时间段内运行，如果时间片结束时该进程仍旧没有运行完成则剥夺CPU并将CPU分配给另一个进程。如果该进程在时间片结束前阻塞或结束则立刻进行切换。</p>
-<h2 id="优先级调度"><a href="#优先级调度" class="headerlink" title="优先级调度"></a>优先级调度</h2><p>每次从所有进程中选择优先级最高的一个运行。为了防止高优先级的进程毫无止境的运行下去，可以每隔一段时间降低该进程的优先级，如果某一次优先级的降低导致了次高优先级的进程优先级比正在运行的进程的优先级高则进行切换。</p>
-<h2 id="多级队列"><a href="#多级队列" class="headerlink" title="多级队列"></a>多级队列</h2><p>假设有N个队列（Q1,Q2….QN），其中各个队列中的作业(进程)的优先级都是不一样的。假设优先级Priority(Q1) &gt; Priority(Q2) &gt; … &gt; Priority(QN)。对于某个特定的队列来说，遵循的依旧是时间片轮转法。也就是说，每个队列中的任务运行时的时间片长度与队列相关。而且各个队列的时间片是随着优先级的增加而减少的，也就是说，优先级越高的队列中它的时间片就越短。</p>
-<p>多级队列调度算法流程如下：</p>
-<ul>
-<li>进程在进入待调度的队列等待时，首先进入优先级最高的Q1等待。</li>
-<li>首先调度优先级高的队列中的进程。若高优先级中队列中已没有调度的进程，则调度次优先级队列中的进程。例如：Q1,Q2,Q3三个队列，只有在Q1中没有进程等待时才去调度Q2，同理，只有Q1,Q2都为空时才会去调度Q3。</li>
-<li>对于同一个队列中的各个进程，按照时间片轮转法调度。比如Q1队列的时间片为N，那么Q1中的作业在经历了N个时间后若还没有完成，则进入Q2队列等待，若Q2的时间片用完后作业还不能完成，一直进入下一级队列，直至完成。</li>
-<li>在低优先级的队列中的进程在运行时，又有新到达的作业，那么在运行完这个时间片后，CPU马上分配给新到达的作业（抢占式）</li>
-</ul>
-<h2 id="彩票调度"><a href="#彩票调度" class="headerlink" title="彩票调度"></a>彩票调度</h2><p>彩票调度算法，每个待运行的进程分配一张彩票，每次需要调度的时候，随机抽取一张已分配的彩票，中奖的进程获得CPU，因此如果是优先级比较高的进程可以多为其分配一些彩票，来提升其得到CPU的概率。</p>
+<h2 id="处理方法"><a href="#处理方法" class="headerlink" title="处理方法"></a>处理方法</h2><p>针对死锁我们可以从多个方面来避免系统因死锁而收到影响。</p>
+<h3 id="鸵鸟策略"><a href="#鸵鸟策略" class="headerlink" title="鸵鸟策略"></a>鸵鸟策略</h3><p>首先我们可以完全不管，因此如果死锁发生的概率很低或者即使发生了死锁也不会对用户带来多大的影响则可以直接忽略它，从而获得更高的性能。</p>
+<h3 id="死锁检测与死锁恢复"><a href="#死锁检测与死锁恢复" class="headerlink" title="死锁检测与死锁恢复"></a>死锁检测与死锁恢复</h3><p>这种方法并不会避免死锁的发生，而是不断检测死锁，当发现系统进入死锁状态后采取一定措施进行恢复。死锁的检测可以大致分为两类，第一种是每种类型仅有一个资源的死锁检测，这种情况下可以构造出进程对资源的占有和请求的一张有向图，如果在这张有向图中检测出了环则证明发生了死锁。第二种是利用资源分配表，构造出如下数据表项：E向量(资源总量)，A向量(资源剩余量)，C矩阵(每个进程拥有的资源数)，R矩阵(每个进程请求的资源数量)，算法的流程可以描述为：1)寻找一个尚未标记为可完成的进程，且其请求的资源数小于A，2)找到进程后将C矩阵的第i行加到A中，并标记进程为已完成，继续1，3)如果没有找到可以完成运行的进程则终止。</p>
+<p>如果检测到死锁发生后则需要进行死锁恢复，在进行恢复时可以利用抢占进行恢复；利用回滚恢复；通过杀死进程进行恢复。</p>
+<h3 id="死锁预防"><a href="#死锁预防" class="headerlink" title="死锁预防"></a>死锁预防</h3><p>这种方法希望能够在死锁发生前通过破坏死锁的必要条件来避免死锁的发生。其根据死锁的必要条件分为四种，1)破坏互斥条件，例如假脱机打印技术，让多个进程均允许请求打印机，2)破坏占有和等待条件，例如要求所有进程在运行前必须请求所有的资源，3)破坏不可抢占条件，4)破坏环路等待条件，例如给资源编号，进程仅能允许按照编号顺序来请求资源。</p>
+<h3 id="死锁避免"><a href="#死锁避免" class="headerlink" title="死锁避免"></a>死锁避免</h3><p>死锁避免发生在进程运行时，系统保证所有进程运行在安全状态，所谓安全状态表示即使所有进程突然最大程度的请求资源，系统也可以以一定的顺序调度进程，让所有进程均能够运行完成。死锁避免可以使用银行家算法，每次进行资源分配时均检查如果进行该次资源分配不会导致系统进入不安全状态则进行该资源的分配，否则则拒绝分配资源。当然需要注意的是系统进入不安全状态并不一定表示系统会出现死锁。</p>
 
       
     </div>
@@ -472,8 +446,6 @@
           
             <a href="/tags/Operating-System/" rel="tag"># Operating System</a>
           
-            <a href="/tags/Schedule/" rel="tag"># Schedule</a>
-          
         </div>
       
 
@@ -485,8 +457,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/10/24/Sort/" rel="next" title="Sort">
-                <i class="fa fa-chevron-left"></i> Sort
+              <a href="/2018/10/25/内存管理/" rel="next" title="内存管理">
+                <i class="fa fa-chevron-left"></i> 内存管理
               </a>
             
           </div>
@@ -494,10 +466,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/10/25/内存管理/" rel="prev" title="内存管理">
-                内存管理 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -680,7 +648,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#进程调度"><span class="nav-number">1.</span> <span class="nav-text">进程调度</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#先来先服务-FCFS"><span class="nav-number">1.2.</span> <span class="nav-text">先来先服务(FCFS)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#短作业优先"><span class="nav-number">1.3.</span> <span class="nav-text">短作业优先</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最短剩余时间优先"><span class="nav-number">1.4.</span> <span class="nav-text">最短剩余时间优先</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#轮转调度"><span class="nav-number">1.5.</span> <span class="nav-text">轮转调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#优先级调度"><span class="nav-number">1.6.</span> <span class="nav-text">优先级调度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多级队列"><span class="nav-number">1.7.</span> <span class="nav-text">多级队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#彩票调度"><span class="nav-number">1.8.</span> <span class="nav-text">彩票调度</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#死锁"><span class="nav-number">1.</span> <span class="nav-text">死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#必要条件"><span class="nav-number">1.2.</span> <span class="nav-text">必要条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理方法"><span class="nav-number">1.3.</span> <span class="nav-text">处理方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#鸵鸟策略"><span class="nav-number">1.3.1.</span> <span class="nav-text">鸵鸟策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#死锁检测与死锁恢复"><span class="nav-number">1.3.2.</span> <span class="nav-text">死锁检测与死锁恢复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#死锁预防"><span class="nav-number">1.3.3.</span> <span class="nav-text">死锁预防</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#死锁避免"><span class="nav-number">1.3.4.</span> <span class="nav-text">死锁避免</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
