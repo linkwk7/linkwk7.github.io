@@ -108,25 +108,25 @@
 
 
 
-  <meta name="description" content="由源代码到可执行文件简介C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。">
-<meta name="keywords" content="CPP">
+  <meta name="description" content="IO模型简介一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：  阻塞式IO 非阻塞式IO IO复用(select/poll) 信号驱动式IO(SIGIO) 异步IO(AIO)">
+<meta name="keywords" content="Operating System">
 <meta property="og:type" content="article">
-<meta property="og:title" content="从源代码到可执行文件">
-<meta property="og:url" content="https://linkwk7.github.io/2018/10/24/由源代码到可执行文件/index.html">
+<meta property="og:title" content="IO模型">
+<meta property="og:url" content="https://linkwk7.github.io/2018/10/30/IO模型/index.html">
 <meta property="og:site_name" content="Linkwk7">
-<meta property="og:description" content="由源代码到可执行文件简介C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。">
+<meta property="og:description" content="IO模型简介一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：  阻塞式IO 非阻塞式IO IO复用(select/poll) 信号驱动式IO(SIGIO) 异步IO(AIO)">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-10-24T08:08:57.756Z">
+<meta property="og:updated_time" content="2018-10-30T11:22:02.227Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="从源代码到可执行文件">
-<meta name="twitter:description" content="由源代码到可执行文件简介C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。">
+<meta name="twitter:title" content="IO模型">
+<meta name="twitter:description" content="IO模型简介一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：  阻塞式IO 非阻塞式IO IO复用(select/poll) 信号驱动式IO(SIGIO) 异步IO(AIO)">
 
 
 
 
 
 
-  <link rel="canonical" href="https://linkwk7.github.io/2018/10/24/由源代码到可执行文件/"/>
+  <link rel="canonical" href="https://linkwk7.github.io/2018/10/30/IO模型/"/>
 
 
 
@@ -136,7 +136,7 @@
   };
 </script>
 
-  <title>从源代码到可执行文件 | Linkwk7</title>
+  <title>IO模型 | Linkwk7</title>
   
 
 
@@ -305,7 +305,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/24/由源代码到可执行文件/">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/30/IO模型/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Linkwk7">
@@ -322,7 +322,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">从源代码到可执行文件
+          <h1 class="post-title" itemprop="name headline">IO模型
               
             
           </h1>
@@ -347,7 +347,7 @@
                 
               
 
-              <time title="Created: 2018-10-24 16:06:53 / Modified: 16:08:57" itemprop="dateCreated datePublished" datetime="2018-10-24T16:06:53+08:00">2018-10-24</time>
+              <time title="Created: 2018-10-30 19:21:25 / Modified: 19:22:02" itemprop="dateCreated datePublished" datetime="2018-10-30T19:21:25+08:00">2018-10-30</time>
             
 
             
@@ -376,7 +376,7 @@
                   , 
                 
               
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/CPP/" itemprop="url" rel="index"><span itemprop="name">CPP</span></a></span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Operating-System/" itemprop="url" rel="index"><span itemprop="name">Operating System</span></a></span>
 
                 
                 
@@ -410,28 +410,23 @@
       
 
       
-        <h1 id="由源代码到可执行文件"><a href="#由源代码到可执行文件" class="headerlink" title="由源代码到可执行文件"></a>由源代码到可执行文件</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>C或者C++的代码变为一个可执行文件主要需要经过以下几个阶段，1)预编译，2)编译，3)汇编，4)链接。接下来我会分别介绍一下这几个阶段所完成的工作。</p>
+        <h1 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：</p>
+<ul>
+<li>阻塞式IO</li>
+<li>非阻塞式IO</li>
+<li>IO复用(select/poll)</li>
+<li>信号驱动式IO(SIGIO)</li>
+<li>异步IO(AIO)</li>
+</ul>
 <a id="more"></a>
-<h2 id="预编译"><a href="#预编译" class="headerlink" title="预编译"></a>预编译</h2><p>在预编译过程中主要处理代码文件中的以#开始的指令，如#include或者#define之类的。在预处理阶段会执行以下操作：</p>
-<ul>
-<li>删除所有的#define，展开所有的宏定义</li>
-<li>处理所有的条件预编译指令，如#ifdef，#if等</li>
-<li>删除所有的注释</li>
-<li>添加行号和文件名标识，从而让编译时能够产生合适的编译错误和警告信息</li>
-<li>保留所有#pragma指令，因为这些指令会执导编译器的执行</li>
-</ul>
-<h2 id="编译"><a href="#编译" class="headerlink" title="编译"></a>编译</h2><p>编译过程会将预处理完成的文件进行词法分析、语法分析、语义分析并在进行相应的优化后产生对应的汇编代码文件。</p>
-<ul>
-<li>词法分析：该过程对源代码进行扫描，并将其中的字符序列分割为一系列记号</li>
-<li>语法分析：针对词法分析扫描得到的记号进行语法分析，产生语法树，语法树是一种以表达式为节点的树</li>
-<li>语义分析：对语法树进行分析，来判断其代表的表达式是否有意义</li>
-<li>优化：将语法树转换为中间代码</li>
-<li>目标代码生成：有代码生成器将中间代码转换为目标机器代码</li>
-<li>目标代码优化：对生成的目标机器代码进行优化</li>
-</ul>
-<h2 id="汇编"><a href="#汇编" class="headerlink" title="汇编"></a>汇编</h2><p>将汇编代码转换为机器可以执行的指令，最终生成目标文件。在生成的目标文件中除了自己的数据和机器指令外还要包含至少三张表，未解决符号表、导出符号表和地址重定向表，这三张表用于告诉连接器自己需要什么符号、自己可以提供什么符号以及本编译单元对自身地址引用的记录。</p>
-<h2 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h2><p>链接过程会将生成的目标文件组合为一个可执行文件。由于某个目标文件可能引用其他目标文件中的某个符号，例如函数或者变量等，因此需要链接器来解决这些符号的解析。链接可以大致分为两种，第一种是静态链接：在这种链接方式下，函数的代码将从其所在的静态链接库中拷贝到最终的可执行程序中，这样程序在执行时会将这些代码装载进内存中；另一种是动态链接：这种情况下函数的代码被放到某个动态链接库中，链接程序在进行动态链接时仅会记录需要的共享的动态链接库的部分信息，在执行时动态链接库的内容将映射到相应进程的内存空间中，动态链接程序会根据可执行程序中记录的信息找到相应的函数调用入口。</p>
-<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p><a href="http://www.cnblogs.com/hongfenglee/archive/2012/02/18/2356808.html" target="_blank" rel="noopener">http://www.cnblogs.com/hongfenglee/archive/2012/02/18/2356808.html</a></p>
+<h2 id="阻塞式"><a href="#阻塞式" class="headerlink" title="阻塞式"></a>阻塞式</h2><p>阻塞式IO表示对IO函数的调用需要等待整个IO完成才会返回，即仅当数据被复制到应用进程缓冲区后才会返回。例如使用read系统调用读取某个socket，如果不是立即接收到数据，服务器进程会被阻塞，之后一直等待用户数据到达，用户数据到达后会将数据写进内核缓冲区，之后将数据从内核缓冲区复制到用户进程缓冲区，完成了上述工作后才会将执行权限返回给用户(从内核态切换到用户态)</p>
+<p>由于阻塞式IO效率较低，如果用户数据一直没有到达则会导致整个服务器被阻塞(单进程/单线程)，因此为了不影响服务器接受其他进程的连接，可以考虑为每个连接的用户创建新线程，每次read系统调用仅会阻塞单个线程，不会影响服务器接受新的连接。在多线程模型下，主线程等待用户请求，用户请求到达后会创建新的线程，新线程负责随后于用户的交互，但由于新的线程也会占用较多系统资源，且线程较多后调度开销也会增大，因此并不适合高并发的场景。</p>
+<h2 id="非阻塞式IO"><a href="#非阻塞式IO" class="headerlink" title="非阻塞式IO"></a>非阻塞式IO</h2><p>非阻塞式IO会在调用后立刻返回，调用者通过对返回值的判断确定该次调用是否完成了IO。应用进程为了获知是否有数据到达需要不断的执行系统调用来确定IO是否完成，这种查询方式称为轮询。由于利用这种方式需要操作系统处理更多的系统调用，因此CPU利用率较低。</p>
+<h2 id="IO复用"><a href="#IO复用" class="headerlink" title="IO复用"></a>IO复用</h2><p>使用select/poll等待数据，并等待多个套接字中的任何一个变为可读，这一过程会被阻塞，当一个套接字可读后该函数才会返回，之后可以使用read等系统调用从套接字中读取数据。这种方式可以让单个进程拥有处理多个IO时间的能力，因此又被称为事件驱动IO。如果一个web服务器没有使用IO复用而是使用多线程模型，则每个套接字需要一个单独的线程去处理，因此相比之下，IO复用不需要进程创建和切换的开销，因此系统开销更小。</p>
+<h2 id="信号驱动式IO"><a href="#信号驱动式IO" class="headerlink" title="信号驱动式IO"></a>信号驱动式IO</h2><p>应用进程使用sigaction发出信号，内核立刻返回，应用进程继续执行，而内核在有数据到达时向进程发送SIGIO信号，应用进程在收到信号的信号处理函数中调用read等函数读取数据。</p>
+<h2 id="异步IO"><a href="#异步IO" class="headerlink" title="异步IO"></a>异步IO</h2><p>应用进程调用aio_read系统调用后立刻返回，应用进程可以继续执行，内核会在操作完成后向应用进程发送信号表示传输已经完成。异步IO与信号驱动式IO的区别就是异步IO的信号是用来通知应用进程IO已经完成的，而信号驱动IO中的信号是用来通知应用进程已有数据到达可以开始IO的。</p>
+<h2 id="五种信号模型区别"><a href="#五种信号模型区别" class="headerlink" title="五种信号模型区别"></a>五种信号模型区别</h2><p>可以将这五种模型分为同步与异步两类，同步IO指将数据从内核缓冲区复制到应用进程缓冲区的过程会阻塞，同步IO包括阻塞式IO、非阻塞式IO、IO复用、信号驱动式IO；异步IO则完成不会阻塞，该类包括异步IO。同步IO中仅阻塞IO会在等待数据的过程中阻塞，其他三种方式不会阻塞。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://github.com/CyC2018/CS-Notes/blob/master/notes/Socket.md" target="_blank" rel="noopener">https://github.com/CyC2018/CS-Notes/blob/master/notes/Socket.md</a><br><a href="https://blog.csdn.net/davidsguo008/article/details/73556811" target="_blank" rel="noopener">https://blog.csdn.net/davidsguo008/article/details/73556811</a></p>
 
       
     </div>
@@ -452,7 +447,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/CPP/" rel="tag"># CPP</a>
+            <a href="/tags/Operating-System/" rel="tag"># Operating System</a>
           
         </div>
       
@@ -465,8 +460,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/10/06/raft/" rel="next" title="Raft">
-                <i class="fa fa-chevron-left"></i> Raft
+              <a href="/2018/10/30/内存对齐/" rel="next" title="内存对齐">
+                <i class="fa fa-chevron-left"></i> 内存对齐
               </a>
             
           </div>
@@ -474,10 +469,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/10/24/Sort/" rel="prev" title="Sort">
-                Sort <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -660,7 +651,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#由源代码到可执行文件"><span class="nav-number">1.</span> <span class="nav-text">由源代码到可执行文件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#预编译"><span class="nav-number">1.2.</span> <span class="nav-text">预编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编译"><span class="nav-number">1.3.</span> <span class="nav-text">编译</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#汇编"><span class="nav-number">1.4.</span> <span class="nav-text">汇编</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#链接"><span class="nav-number">1.5.</span> <span class="nav-text">链接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用"><span class="nav-number">1.6.</span> <span class="nav-text">引用</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#IO模型"><span class="nav-number">1.</span> <span class="nav-text">IO模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阻塞式"><span class="nav-number">1.2.</span> <span class="nav-text">阻塞式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#非阻塞式IO"><span class="nav-number">1.3.</span> <span class="nav-text">非阻塞式IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO复用"><span class="nav-number">1.4.</span> <span class="nav-text">IO复用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信号驱动式IO"><span class="nav-number">1.5.</span> <span class="nav-text">信号驱动式IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步IO"><span class="nav-number">1.6.</span> <span class="nav-text">异步IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五种信号模型区别"><span class="nav-number">1.7.</span> <span class="nav-text">五种信号模型区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">1.8.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
             
 
           </div>
