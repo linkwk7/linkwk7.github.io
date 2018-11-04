@@ -302,6 +302,196 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/09/27/LevelDB-Compaction/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/09/27/LevelDB-Compaction/" itemprop="url">
+                  LevelDB-Compaction
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-09-27 12:08:55" itemprop="dateCreated datePublished" datetime="2018-09-27T12:08:55+08:00">2018-09-27</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-10-01 07:22:41" itemprop="dateModified" datetime="2018-10-01T07:22:41+08:00">2018-10-01</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/" itemprop="url" rel="index"><span itemprop="name">Database</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Database/LevelDB/" itemprop="url" rel="index"><span itemprop="name">LevelDB</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="LevelDB源代码分析"><a href="#LevelDB源代码分析" class="headerlink" title="LevelDB源代码分析"></a>LevelDB源代码分析</h1><h2 id="Intro"><a href="#Intro" class="headerlink" title="Intro"></a>Intro</h2><p>这一篇主要介绍LevelDB的Compaction的过程。在上一篇我们看到LevelDB在打开数据库时会调用MaybeScheduleCompaction这个函数，该函数可能会在单独的线程调度Compaction。接下来我们首先介绍一下有哪些操作可以触发LevelDB的Compaction之后在介绍Compaction的流程。</p>
+<p>在LevelDB中Compaction的触发可以大致分为两类，第一类是用户调用LevelDB的CompactRange接口来进行底层数据的压缩，第二类是用户调用Get/Write等操作时，随着LevelDB中某一个Level的文件大小或数量或者文件查找次数超过一定阈值来触发Compaction。当Compaction被触发后会统一调用MaybeScheduleCompaction，接下来逐行分析该函数。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> DBImpl::MaybeScheduleCompaction() &#123;</span><br><span class="line">    mutex_.AssertHeld();</span><br><span class="line">    <span class="keyword">if</span> (background_compaction_scheduled_) &#123;</span><br><span class="line">        <span class="comment">// 已有线程正在进行Compaction</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (shutting_down_.Acquire_Load()) &#123;</span><br><span class="line">        <span class="comment">// 正在删除数据库</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!bg_error_.ok()) &#123;</span><br><span class="line">        <span class="comment">// 过去Compaction的过程存在错误</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (imm_ == <span class="literal">nullptr</span> &amp;&amp; manual_compaction_ == <span class="literal">nullptr</span> &amp;&amp;</span><br><span class="line">            !versions_-&gt;NeedsCompaction()) &#123;</span><br><span class="line">        <span class="comment">// 现在不需要进行Compaction</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        background_compaction_scheduled_ = <span class="literal">true</span>;</span><br><span class="line">        <span class="comment">// 进行Compaction，最终调用的是BackgroundCall</span></span><br><span class="line">        env_-&gt;Schedule(&amp;DBImpl::BGWork, <span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/09/27/LevelDB-Compaction/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/09/24/LevelDB-Open/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -667,7 +857,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">13</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -696,7 +886,11 @@
                     
                       
                     
-                    <span class="site-state-item-count">8</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -731,7 +925,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">11</span>
+                      
+                    
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

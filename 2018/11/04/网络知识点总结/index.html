@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="网络网络体系结构对网络层次的划分有多种，例如OSI的七层网络模型，TCP/IP的四层网络模型以及部分书籍中的五层网络模型。我们接下来分别介绍这几种网络模型，看看每层的功能，之后会分别对每层进行更详细的介绍。 五层网络模型五层网络模型中，网络由下至上分别为物理层、数据链路层、网络层、传输层、应用层。其每层的功能如下：  物理层： 保证计算机能够在连接不同计算机的传输介质上传输数据比特流，也就是说物理">
+<meta name="keywords" content="Network">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网络知识点总结">
+<meta property="og:url" content="https://linkwk7.github.io/2018/11/04/网络知识点总结/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="网络网络体系结构对网络层次的划分有多种，例如OSI的七层网络模型，TCP/IP的四层网络模型以及部分书籍中的五层网络模型。我们接下来分别介绍这几种网络模型，看看每层的功能，之后会分别对每层进行更详细的介绍。 五层网络模型五层网络模型中，网络由下至上分别为物理层、数据链路层、网络层、传输层、应用层。其每层的功能如下：  物理层： 保证计算机能够在连接不同计算机的传输介质上传输数据比特流，也就是说物理">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-11-04T08:59:50.903Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="网络知识点总结">
+<meta name="twitter:description" content="网络网络体系结构对网络层次的划分有多种，例如OSI的七层网络模型，TCP/IP的四层网络模型以及部分书籍中的五层网络模型。我们接下来分别介绍这几种网络模型，看看每层的功能，之后会分别对每层进行更详细的介绍。 五层网络模型五层网络模型中，网络由下至上分别为物理层、数据链路层、网络层、传输层、应用层。其每层的功能如下：  物理层： 保证计算机能够在连接不同计算机的传输介质上传输数据比特流，也就是说物理">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/11/04/网络知识点总结/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>网络知识点总结 | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/11/04/网络知识点总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">网络知识点总结
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-11-04 16:59:16 / Modified: 16:59:50" itemprop="dateCreated datePublished" datetime="2018-11-04T16:59:16+08:00">2018-11-04</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Operating-System/" itemprop="url" rel="index"><span itemprop="name">Operating System</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Operating-System/Network/" itemprop="url" rel="index"><span itemprop="name">Network</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h1><h2 id="网络体系结构"><a href="#网络体系结构" class="headerlink" title="网络体系结构"></a>网络体系结构</h2><p>对网络层次的划分有多种，例如OSI的七层网络模型，TCP/IP的四层网络模型以及部分书籍中的五层网络模型。我们接下来分别介绍这几种网络模型，看看每层的功能，之后会分别对每层进行更详细的介绍。</p>
+<h3 id="五层网络模型"><a href="#五层网络模型" class="headerlink" title="五层网络模型"></a>五层网络模型</h3><p>五层网络模型中，网络由下至上分别为物理层、数据链路层、网络层、传输层、应用层。其每层的功能如下：</p>
+<ul>
+<li>物理层： 保证计算机能够在连接不同计算机的传输介质上传输数据比特流，也就是说物理层需要尽可能的屏蔽掉计算机网络中的硬件设备和传输媒体的差异，确保原始的数据可以在各种物理媒体上传输。</li>
+<li>数据链路层：数据链路层在物理层提供的服务的基础上向网络层提供服务。由于主机之间可能有多条链路，该层为同一链路的主机提供数据传输服务。该层将网络层传递的分组拆分为帧。数据链路层还会处理对共享信道的访问控制及防止高速发送方淹没接收方。</li>
+<li>网络层：为主机提供数据传输服务，利用数据链路层提供的相邻端点之间的数据帧的传送功能，将数据设法从源端点经过若干个中间节点传送到目的端。该层将传输层传递的报文段或用户数据段封装为分组。</li>
+<li>传输层：为进程提供数据传输服务。</li>
+<li>应用层：为特定应用程序提供数据传输服务，如HTTP、DNS等。传输单位为报文。</li>
+</ul>
+<a id="more"></a>
+<h3 id="OSI七层网络模型"><a href="#OSI七层网络模型" class="headerlink" title="OSI七层网络模型"></a>OSI七层网络模型</h3><p>OSI在传输层上方有会话层与表示层，其中表示层用于数据压缩、加密和数据描述，使得应用层序不必关心不同主机之间数据内部格式不同的问题。而会话层用于建立与管理会话。在五层协议中这些工作完全留给应用程序开发者来处理。</p>
+<h2 id="物理层"><a href="#物理层" class="headerlink" title="物理层"></a>物理层</h2><p>物理层的存在主要是为了解决以下问题：</p>
+<ul>
+<li>物理层要尽可能的平步物理设备和传输媒体(介质)的差异，为上层数据链路层屏蔽这些差异</li>
+<li>物理层需要向上层提供在一条物理的传输媒体上进行传输/接受比特流的能力，因此物理层需要处理物理连接的建立、维持和释放的能力</li>
+<li>在两个相邻的系统之间唯一的标识数据电路</li>
+</ul>
+<h3 id="通信方式"><a href="#通信方式" class="headerlink" title="通信方式"></a>通信方式</h3><p>根据信息在介质上的传输方向，可以分为三类：</p>
+<ul>
+<li>单工通信：单向传输</li>
+<li>半双工通信：双向传输，但同一时间仅能进行单向传输</li>
+<li>全双工通信：双向传输，同一时间能够进行双向传输</li>
+</ul>
+<h2 id="数据链路层"><a href="#数据链路层" class="headerlink" title="数据链路层"></a>数据链路层</h2><p>数据链路层在物理层提供的服务的基础上向网络层提供服务，其最基本的服务是将来自于网络层的数据传输到相邻节点的网络层。由于比特流在物理层传输时会存在一定误差，因此需要在存在差错的物理层的基础上，采用差错检测、差错控制和流量控制等方法，将有差错的物理线路改进为无差错的数据链路，向网络层提供高质量的数据传输服务。数据链路层可以细分为两层，一为逻辑链路控制层，用于对两个节点之间的链路进行初始化，防止连接中断，保持可靠的通信；另一为介质访问控制层，用于控制对共享介质的访问。</p>
+<h3 id="数据链路层的需要解决的问题如下："><a href="#数据链路层的需要解决的问题如下：" class="headerlink" title="数据链路层的需要解决的问题如下："></a>数据链路层的需要解决的问题如下：</h3><h4 id="成帧"><a href="#成帧" class="headerlink" title="成帧"></a>成帧</h4><p>将网络层传下来的分组添加首部和尾部，用于标记帧的开始和结束。</p>
+<h4 id="链路接入"><a href="#链路接入" class="headerlink" title="链路接入"></a>链路接入</h4><p>媒体访问控制协议(MAC)用于规定帧在链路上的传输的规则，由于可能有多个节点使用同一条链路，因此需要MAC来协调各个节点的传输。具体可以参考下文信道分类。</p>
+<h4 id="可靠交付"><a href="#可靠交付" class="headerlink" title="可靠交付"></a>可靠交付</h4><p>当链路层协议提供可靠交付服务时，可以保证无差错的经由链路层移动每个数据报。</p>
+<h4 id="透明传输"><a href="#透明传输" class="headerlink" title="透明传输"></a>透明传输</h4><p>由于用于标识帧的开始与结束的字符可能与数据包中的某些数据的二进制码相同造成帧的开始与结束位置的确定错误。可以在数据部分出现首尾部标识的前方插入转义字符，如果数据部分出现转义字符则在转义支付前插入新的转义字符。接收端在接收到数据后能够进行处理还原出原始数据。</p>
+<h4 id="差错检测与纠正"><a href="#差错检测与纠正" class="headerlink" title="差错检测与纠正"></a>差错检测与纠正</h4><p>由于物理层传输数据可能出错，因此可以使用奇偶校验或循环冗余校验(CRC)等方式来检测比特差错。</p>
+<h3 id="信道分类"><a href="#信道分类" class="headerlink" title="信道分类"></a>信道分类</h3><h4 id="广播信道"><a href="#广播信道" class="headerlink" title="广播信道"></a>广播信道</h4><p>一对多通信，一个节点发送的数据能够被所有广播信道上的所有节点接收到，因而也需要一定的协议来进行控制，避免发生冲突。进行控制的方法主要分为两种，第一种是信道复用技术，另一种是载波监听多路访问协议。</p>
+<h5 id="信道复用技术"><a href="#信道复用技术" class="headerlink" title="信道复用技术"></a>信道复用技术</h5><p>可以分为下列几种：</p>
+<ul>
+<li>频分复用：所有主机在相同时间占用不同的频率带宽资源</li>
+<li>时分复用：所有主机在不同的时间占用相同的频率带宽资源</li>
+<li>统计时分复用：对时分复用的一种改进，不固定每个用户在时分复用帧中的位置，只要有数据就集中起来组合为统计时分复用帧然后发送。</li>
+</ul>
+<h5 id="载波监听多路访问协议-CSMA"><a href="#载波监听多路访问协议-CSMA" class="headerlink" title="载波监听多路访问协议(CSMA)"></a>载波监听多路访问协议(CSMA)</h5><h6 id="1坚持CSMA"><a href="#1坚持CSMA" class="headerlink" title="1坚持CSMA"></a>1坚持CSMA</h6><p>发送主机监听信道，一旦信道空闲就发送</p>
+<h6 id="不坚持CSMA"><a href="#不坚持CSMA" class="headerlink" title="不坚持CSMA"></a>不坚持CSMA</h6><p>需要发送时监听信道，如果信道空闲就发送，如果不空闲则随机等待一段时间再发送</p>
+<h6 id="p坚持CSMA"><a href="#p坚持CSMA" class="headerlink" title="p坚持CSMA"></a>p坚持CSMA</h6><p>如果信道空闲以概率p发送数据，否则推迟发送</p>
+<h6 id="CSMA-CD协议"><a href="#CSMA-CD协议" class="headerlink" title="CSMA/CD协议"></a>CSMA/CD协议</h6><p>CSMA/CD是载波监听多点接入/碰撞检测。其中多点接入标识这是总线型网络，多个主机以多点的方式连接到总线上；载波监听标识每个主机都需要不断的监听信道，如果在需要发送数据时发现信道被占用正则必须等待；碰撞检测标识在发送中如果发现其他主机正在发送数据则标识发生了碰撞，虽然发送前该主机检测信道空闲，但是由于电磁波传播时延的存在，发送时还是可能发生了碰撞。假设端到端的最大传播时延为t，则发送的主机最多仅需2t即可发现是否发生了碰撞，称这段时间为争用期，在争用期结束后如果发送主机尚未检测到碰撞则该次发送必定不会发生碰撞。如果发生了碰撞则发送端会立刻停止发送，然后随机等待一段时间再发送。</p>
+<h4 id="点对点信道"><a href="#点对点信道" class="headerlink" title="点对点信道"></a>点对点信道</h4><p>由于不会发生碰撞，因此控制也较为简单，可以使用PPP协议进行控制。</p>
+<h4 id="交换机"><a href="#交换机" class="headerlink" title="交换机"></a>交换机</h4><p>交换机工作在数据链路层，具有自学习能力，该自学习能力学习的是交换表的内容，该表内存储着MAC地址到端口的映射。当交换机从某个端口接收到来自某个MAC的地址的消息时就将该MAC地址与端口的映射关系记录下来。</p>
+<h2 id="网络层"><a href="#网络层" class="headerlink" title="网络层"></a>网络层</h2><p>网络层向上层提供简单灵活的无连接的、尽最大努力交付的数据包服务。使用IP协议可以将异构的网络连接起来，使得网络看起来像是一个统一的网络。由于在大多数网络中，数据包需要经过多条到达目的地，因此需要路由算法来选择一条路径将数据包进行转发。</p>
+<p>与IP协议配套使用的还有ARP协议，用于将IP地址解析为MAC地址；ICMP协议，用于在主机和路由器之间传递消息；IGMP协议，用于支持组播。</p>
+<h3 id="路由算法"><a href="#路由算法" class="headerlink" title="路由算法"></a>路由算法</h3><p>由于网络会划分为多个自治系统，因此需要根据路由算法的使用范围将其进行划分。另外，路由算法还可以分为两大类：非自适应算法，该类算法会预先计算好路径，在网络启动时将这些路径下载到路由器中；自适应算法会改变路由决策来反映拓扑结构的变化。</p>
+<p>自治系统内路由选择：RIP、OSPF<br>自治系统间路由选择：BGP</p>
+<h4 id="RIP"><a href="#RIP" class="headerlink" title="RIP"></a>RIP</h4><p>RIP是一种基于距离向量的路由选择协议，距离是指跳数。RIP会每隔一段时间与相邻节点交换自己的路由表，经过一段时间后，所有路由器都可以直到最终到达本自治系统中任意一个网络的最短距离和下一跳的地址。其流程如下：</p>
+<ul>
+<li>对地址为X的相邻路由器发来的RIP报文，先修改报文中的所有项目，把下一跳字段中的地址改为X，并把所有的距离字段加 1</li>
+<li>对修改后的RIP报文中的每一个项目，进行以下步骤：<ul>
+<li>若原来的路由表中没有目的网络N，则把该项目添加到路由表中；</li>
+<li>否则：若下一跳路由器地址是X，则把收到的项目替换原来路由表中的项目；否则：若收到的项目中的距离d小于路由表中的距离，则进行更新；否则什么也不做。</li>
+<li>若经过一段时间还没有收到相邻路由器的更新路由表，则把该相邻路由器标为不可达，即把距离置为16。</li>
+</ul>
+</li>
+</ul>
+<p>RIP协议实现简单，开销小。但是RIP能使用的最大距离为15，限制了网络的规模。并且当网络出现故障时，要经过比较长的时间才能将此消息传送到所有路由器。</p>
+<h4 id="OSPF协议"><a href="#OSPF协议" class="headerlink" title="OSPF协议"></a>OSPF协议</h4><p>开放最短路径优先OSPF，是为了克服RIP的缺点而开发出来的。最短路径优先标识使用了Dijkstra算法来求解最短路径。OSPF 具有以下特点：</p>
+<ul>
+<li>向本自治系统中的所有路由器发送信息，这种方法是洪泛法。</li>
+<li>发送的信息就是与相邻路由器的链路状态，链路状态包括与哪些路由器相连以及链路的度量，度量用费用、距离、时延、带宽等来表示。</li>
+<li>只有当链路状态发生变化时，路由器才会发送信息。</li>
+<li>所有路由器都具有全网的拓扑结构图，并且是一致的。相比于 RIP，OSPF 的更新过程收敛的很快。</li>
+</ul>
+<h4 id="BGP协议"><a href="#BGP协议" class="headerlink" title="BGP协议"></a>BGP协议</h4><p>由于互联网规模较大，并且每个AS内部使用不同的路由协议，难以度量，且AS之间的路由选择必须考虑一些其他因素，如某些AS不愿负担其他流量，因此BGP仅能计算一条较好的路由，而不是最佳路由。使用BGP时，每个AS需要配置BGP发言人，然后再相邻的BGP发言人之间简历TCP链接来交换信息。</p>
+<h3 id="路由器"><a href="#路由器" class="headerlink" title="路由器"></a>路由器</h3><p>路由器的主要功能为路由选择和分组转发，由路由选择协议生成路由表，然后路由器利用该表进行分组由输入端口到输出端口的转发。其流程如下：</p>
+<ul>
+<li>路由器从数据包的首部提取目的主机的IP地址，从中分析出网络地址</li>
+<li>如果该网络与该路由器直接相连则直接交付</li>
+<li>如果路由表中有目的地址的特定主机的路由，则将数据报传送给指明的吓一跳路由器</li>
+<li>如果路由表中有到达目的网络的路由，转发到指定的下一跳路由器</li>
+<li>如果有默认路由，转发至默认路由器</li>
+<li>报告转发分组出错</li>
+</ul>
+<h3 id="IP数据包的部分字段"><a href="#IP数据包的部分字段" class="headerlink" title="IP数据包的部分字段"></a>IP数据包的部分字段</h3><ul>
+<li>TTL: 防止无法交付的数据包在网络中不断循环，以路由器跳数为单位，当TTL为0时丢弃该数据包。</li>
+<li>协议：标识携带的数据因由上层那个协议来进行处理，如TCP/UDP等</li>
+<li>标识：数据报长度过长的情况下发生了分片，相同数据包的不同分片有相同的标识</li>
+<li>分片位移：与标识一起用于分片的情况，单位为8字节</li>
+</ul>
+<h3 id="IP地址的编址"><a href="#IP地址的编址" class="headerlink" title="IP地址的编址"></a>IP地址的编址</h3><h4 id="分类"><a href="#分类" class="headerlink" title="分类"></a>分类</h4><p>将地址分为A/B/C/D/E类，A类以0开头，8位网络号，24位主机号；B类10开头，16位网络号，16位主机号；C类110开头，24位网络号，8类主机号；D类1110开头，为组播地址；E类1111开头，为保留地址。</p>
+<h4 id="子网划分"><a href="#子网划分" class="headerlink" title="子网划分"></a>子网划分</h4><p>从主机字段中拿出一部分作为子网号，将IP地址划分为三段，&lt;网络号，子网号，主机号&gt;。</p>
+<h4 id="无分类"><a href="#无分类" class="headerlink" title="无分类"></a>无分类</h4><p>无分类编址(CIDR)，消除了A类、B类、C类地址及划分子网的概念，将IP地址划分为两部分，使用网络前缀号及主机号来对IP地址进行编码，网络前缀的长度可以根据需要来变化。</p>
+<h3 id="ARP协议"><a href="#ARP协议" class="headerlink" title="ARP协议"></a>ARP协议</h3><p>网络层实现不同主机之间的通信，数据链路层实现每段链路上的通信。当网络层需要将一个数据从一台主机转发至另一台主机，数据链路层需要直到这个数据包下一次应当转发给那台主机，需要将目的IP解析为一个MAC地址，数据链路层才知道下一次将该数据包发送给那个主机。ARP协议就是将IP地址解析为MAC地址。</p>
+<p>每个主机都有一个ARP高速缓存，里面有本局域网上的各主机和路由器的IP地址到MAC地址的映射表。如果主机A知道主机B的IP地址，但是ARP高速缓存中没有该IP地址到MAC地址的映射，此时主机A通过广播的方式发送ARP请求分组，主机B收到该请求后会发送ARP响应分组给主机A告知其MAC地址，随后主机A向其高速缓存中写入主机B的IP地址到MAC地址的映射。</p>
+<h3 id="ICMP协议"><a href="#ICMP协议" class="headerlink" title="ICMP协议"></a>ICMP协议</h3><p>ICMP时为了更有效的转发IP数据包，其封装在IP数据包中。Traceroute与Ping均使用ICMP进行工作。</p>
+<h3 id="NAT"><a href="#NAT" class="headerlink" title="NAT"></a>NAT</h3><p>NAT允许一组机器共用一些IP地址来解决公网地址不足的问题。NAT在局域网内部使用私有地址，当内部节点需要与外部节点进行通信时，在网关处将私有地址替换为公有地址，从而能够在公网上使用。</p>
+<h2 id="传输层"><a href="#传输层" class="headerlink" title="传输层"></a>传输层</h2><p>网络层仅将分组转发至目的主机，但真正需要进行通信的是主机中的进程。传输层提供了进程间的逻辑通信，并向用于屏蔽了网络层的细节。</p>
+<h3 id="TCP"><a href="#TCP" class="headerlink" title="TCP"></a>TCP</h3><p>TCP是面向连接的，提供可靠交付、有流量控制、拥塞控制、全双工的、面向字节流的的通信协议。</p>
+<h3 id="TCP首部部分字段"><a href="#TCP首部部分字段" class="headerlink" title="TCP首部部分字段"></a>TCP首部部分字段</h3><ul>
+<li>序号：字节流的序号，如果数据字段包含一个字段或为SYN、FIN、RST则也会占用一个序号</li>
+<li>确认号：确认已经接收到的数据</li>
+<li>接受窗口大小：用于流量控制</li>
+<li>数据偏移：数据部分距离报文段起始处偏移量，实际指首部长度</li>
+</ul>
+<h3 id="三次握手"><a href="#三次握手" class="headerlink" title="三次握手"></a>三次握手</h3><p>建立TCP连接共需三次数据交换</p>
+<ul>
+<li>发起方设置SYN为1，产生一个序号x，并将数据发送给对端，然后等待对端确认</li>
+<li>对端收到后，返回数据包，设置SYN为1，ACK为1，序号y，ack设置为x+1，标识等待x+1的数据</li>
+<li>设置ACK为1，ack为y+1，该数据报不占用序号</li>
+</ul>
+<h3 id="四次挥手"><a href="#四次挥手" class="headerlink" title="四次挥手"></a>四次挥手</h3><p>断开TCP连接共需四次数据交换。由于TCP为全双工的，因此每个方向都需要单独关闭通信，当一方完成数据发送后，就发送一个FIN来终止该方向的连接。</p>
+<ul>
+<li>发起方发送数据包，设置FIN为1，序号为u</li>
+<li>对端接受到FIN后将ACK设置1，ack为u+1</li>
+<li>对端发送完数据后，设置FIN为1，序号为v，ACK为1，ack为u+1</li>
+<li>发起方设置ACK为1，ack为v+1，序号为u+1</li>
+</ul>
+<h3 id="为何建立连接需三次握手断开连接需四次挥手"><a href="#为何建立连接需三次握手断开连接需四次挥手" class="headerlink" title="为何建立连接需三次握手断开连接需四次挥手"></a>为何建立连接需三次握手断开连接需四次挥手</h3><p>由于建立连接时，对端在收到SYN请求后将自己需要发送的SYN以及ACK放在同一个报文中发送给对端。在关闭连接时，收到FIN仅标识对端不会再发送数据了，而由于该主机仍然可能继续发送数据，因此需要单独发送FIN。</p>
+<h3 id="TIME-WAIT为什么需要2MSL-最大报文段生存时间-才能进入CLOSE"><a href="#TIME-WAIT为什么需要2MSL-最大报文段生存时间-才能进入CLOSE" class="headerlink" title="TIME_WAIT为什么需要2MSL(最大报文段生存时间)才能进入CLOSE"></a>TIME_WAIT为什么需要2MSL(最大报文段生存时间)才能进入CLOSE</h3><p>因为需要保证TCP的全双工连接能够可靠的关闭，并保证这次连接的所有数据段再网络中消失。先说第一点，如果Client直接CLOSED了，那么由于IP协议的不可靠性或者是其它网络原因，导致Server没有收到Client最后回复的ACK。那么Server就会在超时之后继续发送FIN，此时由于Client已经CLOSED了，就找不到与重发的FIN对应的连接，最后Server就会收到RST而不是ACK，Server就会以为是连接错误把问题报告给高层。这样的情况虽然不会造成数据丢失，但是却导致TCP协议不符合可靠连接的要求。所以，Client不是直接进入CLOSED，而是要保持TIME_WAIT，当再次收到FIN的时候，能够保证对方收到ACK，最后正确的关闭连接。第二点，如果Client直接CLOSED，然后又再向Server发起一个新连接，我们不能保证这个新连接与刚关闭的连接的端口号是不同的。也就是说有可能新连接和老连接的端口号是相同的。一般来说不会发生什么问题，但是还是有特殊情况出现：假设新连接和已经关闭的老连接端口号是一样的，如果前一次连接的某些数据仍然滞留在网络中，这些延迟数据在建立新连接之后才到达Server，由于新连接和老连接的端口号是一样的，又因为TCP协议判断不同连接的依据是socket pair，于是，TCP协议就认为那个延迟的数据是属于新连接的，这样就和真正的新连接的数据包发生混淆了。所以TCP连接还要在TIME_WAIT状态等待2倍MSL，这样可以保证本次连接的所有数据都从网络中消失。之所以是两个MSL，一个是返回的ACK到达对端所需的最长时间，一个是对端重发FIN到达的最长时间。</p>
+<h3 id="TCP可靠传输"><a href="#TCP可靠传输" class="headerlink" title="TCP可靠传输"></a>TCP可靠传输</h3><p>TCP使用超时与重传来实现可靠传输，如果一个已经发送的报文在一定时间内没有收到确认则会重传该报文段。</p>
+<h3 id="TCP滑动窗口"><a href="#TCP滑动窗口" class="headerlink" title="TCP滑动窗口"></a>TCP滑动窗口</h3><p>TCP中发送方维护一个窗口，只有落在窗口范围内的数据帧才会被发送，接收方也维护一个窗口，仅有落在接受窗口内的数据帧才会被接受，这样通过调整发送方窗口与接收方窗口的大小可以实现流量控制。发送方滑动窗口中左半部分是已发送但未确认的数据，右半部分为可以发送但尚未发送的数据。接收方发送的确认报文中中的窗口字段可以用来控制发送方窗口的大小，从而影响发送方窗口的大小。</p>
+<h3 id="TCP拥塞控制"><a href="#TCP拥塞控制" class="headerlink" title="TCP拥塞控制"></a>TCP拥塞控制</h3><p>当网络出现拥塞时，分组将会丢失，然后发送方会继续进行重传，导致网络更为拥塞，此时应当降低发送方的发送速率。TCP主要通过慢开始、拥塞避免、快重传、快恢复来进行拥塞控制。发送方会维护拥塞窗口(cwnd)，该窗口仅表示发送方在一个RTT内最多可以发送的报文段数。</p>
+<h4 id="慢开始与拥塞避免"><a href="#慢开始与拥塞避免" class="headerlink" title="慢开始与拥塞避免"></a>慢开始与拥塞避免</h4><p>初始时cwnd为1，每收到一个确认会将cwnd加倍，由于每次均将cwnd加倍，因此会设置一个慢开始门限(ssthresh)，当cwnd大于等于ssthresh时进入拥塞避免，此时每次收到ACK仅将cwnd加1。如果遇到了超时则将ssthresh设为cwnd/2，然后重新执行慢开始，即cwnd被重新设置为1。</p>
+<h4 id="快重传与快恢复"><a href="#快重传与快恢复" class="headerlink" title="快重传与快恢复"></a>快重传与快恢复</h4><p>接收方每次收到报文后会对最后一个有序接受的报文进行确认，在发送方如果收到三个重复的确认则直到某个报文段丢失，此时执行快速重传，这种情况下虽然有报文丢失，但并非网络拥塞引起，因此执行快速恢复，将ssthresh设为cwnd/2，cwnd设为ssthresh，进入拥塞避免，而非慢开始。</p>
+<h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3><p>UDP是无连接的，尽最大可能交付，没有拥塞控制，面向报文的通信协议。</p>
+<h2 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h2><p>应用层协议有FTP/DHCP等。</p>
+<h2 id="Web页面请求过程"><a href="#Web页面请求过程" class="headerlink" title="Web页面请求过程"></a>Web页面请求过程</h2><p>TODO</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络.md" target="_blank" rel="noopener">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络.md</a><br><a href="https://www.cnblogs.com/buxiangxin/p/8336022.html" target="_blank" rel="noopener">https://www.cnblogs.com/buxiangxin/p/8336022.html</a></p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Network/" rel="tag"># Network</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/10/30/IO模型/" rel="next" title="IO模型">
+                <i class="fa fa-chevron-left"></i> IO模型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">13</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#网络"><span class="nav-number">1.</span> <span class="nav-text">网络</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#网络体系结构"><span class="nav-number">1.1.</span> <span class="nav-text">网络体系结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#五层网络模型"><span class="nav-number">1.1.1.</span> <span class="nav-text">五层网络模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#OSI七层网络模型"><span class="nav-number">1.1.2.</span> <span class="nav-text">OSI七层网络模型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#物理层"><span class="nav-number">1.2.</span> <span class="nav-text">物理层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#通信方式"><span class="nav-number">1.2.1.</span> <span class="nav-text">通信方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据链路层"><span class="nav-number">1.3.</span> <span class="nav-text">数据链路层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数据链路层的需要解决的问题如下："><span class="nav-number">1.3.1.</span> <span class="nav-text">数据链路层的需要解决的问题如下：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#成帧"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">成帧</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#链路接入"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">链路接入</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#可靠交付"><span class="nav-number">1.3.1.3.</span> <span class="nav-text">可靠交付</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#透明传输"><span class="nav-number">1.3.1.4.</span> <span class="nav-text">透明传输</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#差错检测与纠正"><span class="nav-number">1.3.1.5.</span> <span class="nav-text">差错检测与纠正</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#信道分类"><span class="nav-number">1.3.2.</span> <span class="nav-text">信道分类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#广播信道"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">广播信道</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#信道复用技术"><span class="nav-number">1.3.2.1.1.</span> <span class="nav-text">信道复用技术</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#载波监听多路访问协议-CSMA"><span class="nav-number">1.3.2.1.2.</span> <span class="nav-text">载波监听多路访问协议(CSMA)</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1坚持CSMA"><span class="nav-number">1.3.2.1.2.1.</span> <span class="nav-text">1坚持CSMA</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#不坚持CSMA"><span class="nav-number">1.3.2.1.2.2.</span> <span class="nav-text">不坚持CSMA</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#p坚持CSMA"><span class="nav-number">1.3.2.1.2.3.</span> <span class="nav-text">p坚持CSMA</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#CSMA-CD协议"><span class="nav-number">1.3.2.1.2.4.</span> <span class="nav-text">CSMA/CD协议</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#点对点信道"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">点对点信道</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#交换机"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">交换机</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络层"><span class="nav-number">1.4.</span> <span class="nav-text">网络层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#路由算法"><span class="nav-number">1.4.1.</span> <span class="nav-text">路由算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RIP"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">RIP</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OSPF协议"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">OSPF协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#BGP协议"><span class="nav-number">1.4.1.3.</span> <span class="nav-text">BGP协议</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#路由器"><span class="nav-number">1.4.2.</span> <span class="nav-text">路由器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IP数据包的部分字段"><span class="nav-number">1.4.3.</span> <span class="nav-text">IP数据包的部分字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IP地址的编址"><span class="nav-number">1.4.4.</span> <span class="nav-text">IP地址的编址</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#分类"><span class="nav-number">1.4.4.1.</span> <span class="nav-text">分类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#子网划分"><span class="nav-number">1.4.4.2.</span> <span class="nav-text">子网划分</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#无分类"><span class="nav-number">1.4.4.3.</span> <span class="nav-text">无分类</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP协议"><span class="nav-number">1.4.5.</span> <span class="nav-text">ARP协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ICMP协议"><span class="nav-number">1.4.6.</span> <span class="nav-text">ICMP协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT"><span class="nav-number">1.4.7.</span> <span class="nav-text">NAT</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#传输层"><span class="nav-number">1.5.</span> <span class="nav-text">传输层</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP"><span class="nav-number">1.5.1.</span> <span class="nav-text">TCP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP首部部分字段"><span class="nav-number">1.5.2.</span> <span class="nav-text">TCP首部部分字段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三次握手"><span class="nav-number">1.5.3.</span> <span class="nav-text">三次握手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四次挥手"><span class="nav-number">1.5.4.</span> <span class="nav-text">四次挥手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#为何建立连接需三次握手断开连接需四次挥手"><span class="nav-number">1.5.5.</span> <span class="nav-text">为何建立连接需三次握手断开连接需四次挥手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TIME-WAIT为什么需要2MSL-最大报文段生存时间-才能进入CLOSE"><span class="nav-number">1.5.6.</span> <span class="nav-text">TIME_WAIT为什么需要2MSL(最大报文段生存时间)才能进入CLOSE</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP可靠传输"><span class="nav-number">1.5.7.</span> <span class="nav-text">TCP可靠传输</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP滑动窗口"><span class="nav-number">1.5.8.</span> <span class="nav-text">TCP滑动窗口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP拥塞控制"><span class="nav-number">1.5.9.</span> <span class="nav-text">TCP拥塞控制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#慢开始与拥塞避免"><span class="nav-number">1.5.9.1.</span> <span class="nav-text">慢开始与拥塞避免</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快重传与快恢复"><span class="nav-number">1.5.9.2.</span> <span class="nav-text">快重传与快恢复</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#UDP"><span class="nav-number">1.5.10.</span> <span class="nav-text">UDP</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#应用层"><span class="nav-number">1.6.</span> <span class="nav-text">应用层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Web页面请求过程"><span class="nav-number">1.7.</span> <span class="nav-text">Web页面请求过程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">1.8.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

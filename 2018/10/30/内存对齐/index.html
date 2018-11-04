@@ -116,7 +116,7 @@
 <meta property="og:site_name" content="Linkwk7">
 <meta property="og:description" content="内存对齐简介C++中一个对象所占的内存大小取决于三点：所有非静态成员变量大小总和、编译器所进行的数据对齐而添加的填充的大小、为支持虚函数、虚继承所产生的额外负担。其中编译器会为结构体进行对齐，从而往其中加上一些并不会使用的空间，那么我们为什么需要进行内存对齐呢，其原因大致有两个，一个是平台原因，因为并不是所有的硬件平台都能访问任意地址上的任意数据的，某些硬件平台只能在某些地址处取出某些特定类型的数">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-10-30T11:22:07.152Z">
+<meta property="og:updated_time" content="2018-11-02T11:37:17.967Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="内存对齐">
 <meta name="twitter:description" content="内存对齐简介C++中一个对象所占的内存大小取决于三点：所有非静态成员变量大小总和、编译器所进行的数据对齐而添加的填充的大小、为支持虚函数、虚继承所产生的额外负担。其中编译器会为结构体进行对齐，从而往其中加上一些并不会使用的空间，那么我们为什么需要进行内存对齐呢，其原因大致有两个，一个是平台原因，因为并不是所有的硬件平台都能访问任意地址上的任意数据的，某些硬件平台只能在某些地址处取出某些特定类型的数">
@@ -347,12 +347,24 @@
                 
               
 
-              <time title="Created: 2018-10-30 19:19:56 / Modified: 19:22:07" itemprop="dateCreated datePublished" datetime="2018-10-30T19:19:56+08:00">2018-10-30</time>
+              <time title="Created: 2018-10-30 19:19:56" itemprop="dateCreated datePublished" datetime="2018-10-30T19:19:56+08:00">2018-10-30</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-11-02 19:37:17" itemprop="dateModified" datetime="2018-11-02T19:37:17+08:00">2018-11-02</time>
               
             
           </span>
@@ -414,7 +426,7 @@
 <a id="more"></a>
 <h2 id="内存对齐规则"><a href="#内存对齐规则" class="headerlink" title="内存对齐规则"></a>内存对齐规则</h2><ul>
 <li>对于结构体的各个成员，第一个成员为偏移为0的位置，以后每个数据成员的偏移量必须是min(#pragma pack指定值，这个数据成员自身长度)的倍数</li>
-<li>所有数据成员各自完成对齐后，结构体或联合体自身也需要对齐，因为可能有结构体构造的数组，对齐会按照#pragma pack指定的数值和结构体或联合体最大数据成员长度中比较小的那个进行对齐</li>
+<li>所有数据成员各自完成对齐后，结构体或联合体自身也需要对齐，因为可能有结构体构造的数组(数组中也需每个元素维持上一条性质)，对齐会按照#pragma pack指定的数值和结构体或联合体最大数据成员长度中比较小的那个进行对齐</li>
 </ul>
 
       
@@ -535,7 +547,7 @@
                 
                   <a href="/archives/">
                 
-                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-count">13</span>
                     <span class="site-state-item-name">posts</span>
                   </a>
                 </div>
@@ -564,7 +576,11 @@
                     
                       
                     
-                    <span class="site-state-item-count">8</span>
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">10</span>
                     <span class="site-state-item-name">categories</span>
                   </a>
                 </div>
@@ -599,7 +615,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">11</span>
+                      
+                    
+                    <span class="site-state-item-count">12</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>
