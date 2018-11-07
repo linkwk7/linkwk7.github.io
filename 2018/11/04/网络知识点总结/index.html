@@ -116,7 +116,7 @@
 <meta property="og:site_name" content="Linkwk7">
 <meta property="og:description" content="网络网络体系结构对网络层次的划分有多种，例如OSI的七层网络模型，TCP/IP的四层网络模型以及部分书籍中的五层网络模型。我们接下来分别介绍这几种网络模型，看看每层的功能，之后会分别对每层进行更详细的介绍。 五层网络模型五层网络模型中，网络由下至上分别为物理层、数据链路层、网络层、传输层、应用层。其每层的功能如下：  物理层： 保证计算机能够在连接不同计算机的传输介质上传输数据比特流，也就是说物理">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-11-04T08:59:50.903Z">
+<meta property="og:updated_time" content="2018-11-07T08:36:12.985Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="网络知识点总结">
 <meta name="twitter:description" content="网络网络体系结构对网络层次的划分有多种，例如OSI的七层网络模型，TCP/IP的四层网络模型以及部分书籍中的五层网络模型。我们接下来分别介绍这几种网络模型，看看每层的功能，之后会分别对每层进行更详细的介绍。 五层网络模型五层网络模型中，网络由下至上分别为物理层、数据链路层、网络层、传输层、应用层。其每层的功能如下：  物理层： 保证计算机能够在连接不同计算机的传输介质上传输数据比特流，也就是说物理">
@@ -347,12 +347,24 @@
                 
               
 
-              <time title="Created: 2018-11-04 16:59:16 / Modified: 16:59:50" itemprop="dateCreated datePublished" datetime="2018-11-04T16:59:16+08:00">2018-11-04</time>
+              <time title="Created: 2018-11-04 16:59:16" itemprop="dateCreated datePublished" datetime="2018-11-04T16:59:16+08:00">2018-11-04</time>
             
 
             
               
 
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">Edited on</span>
+                
+                <time title="Modified: 2018-11-07 16:36:12" itemprop="dateModified" datetime="2018-11-07T16:36:12+08:00">2018-11-07</time>
               
             
           </span>
@@ -527,7 +539,44 @@
 <h4 id="快重传与快恢复"><a href="#快重传与快恢复" class="headerlink" title="快重传与快恢复"></a>快重传与快恢复</h4><p>接收方每次收到报文后会对最后一个有序接受的报文进行确认，在发送方如果收到三个重复的确认则直到某个报文段丢失，此时执行快速重传，这种情况下虽然有报文丢失，但并非网络拥塞引起，因此执行快速恢复，将ssthresh设为cwnd/2，cwnd设为ssthresh，进入拥塞避免，而非慢开始。</p>
 <h3 id="UDP"><a href="#UDP" class="headerlink" title="UDP"></a>UDP</h3><p>UDP是无连接的，尽最大可能交付，没有拥塞控制，面向报文的通信协议。</p>
 <h2 id="应用层"><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h2><p>应用层协议有FTP/DHCP等。</p>
-<h2 id="Web页面请求过程"><a href="#Web页面请求过程" class="headerlink" title="Web页面请求过程"></a>Web页面请求过程</h2><p>TODO</p>
+<h2 id="Web页面请求过程"><a href="#Web页面请求过程" class="headerlink" title="Web页面请求过程"></a>Web页面请求过程</h2><ul>
+<li>如果没有配置IP地址，则使用DHCP获取IP地址<ul>
+<li>广播DHCP发现报文，发现DHCP服务器</li>
+<li>DHCP服务器广播DHCP服务报文</li>
+<li>主机从响应的DHCP服务器中选择一个，使用DHCP请求报文请求配置IP地址</li>
+</ul>
+</li>
+<li>浏览器生成TCP套接字，利用该socket向服务器发送HTTP请求，但需要知道服务器的IP地址，需要使用DNS来解析域名<ul>
+<li>首先需要构造一个DNS查询报文，发送给DNS服务器，由于DNS使用UDP，因此将DNS报文封装为一UDP报文，再将其封装为IP报文，IP协议需要负责将该数据包传递给目的主机，如果该目的主机与该主机处于同一网段则可以直接查询其MAC地址，构造数据帧，发送给对端主机，由于IP数据包仅有IP地址，因此需要ARP协议进行MAC地址的解析；如果目的主机与该主机不再同一网段则根据路由表选择下一跳地址，此时需要利用ARP解析下一跳的MAC地址，然后将数据发送给下一台主机</li>
+<li>ARP解析流程<ul>
+<li>已知IP地址后需要查找对应的MAC地址</li>
+<li>首先检查ARP缓存中是否有IP地址对应MAC地址的关系，如果有则直接使用该MAC地址，如果没有则进行ARP请求的广播，查询该IP对应的MAC地址</li>
+<li>所有主机收到该ARP请求后如果发现请求的IP与自身一致则回复自己的MAC地址</li>
+<li>源主机收到ARP响应后将结果加入ARP缓存，并利用该MAC地址与该主机通信</li>
+</ul>
+</li>
+<li>DNS服务器收到查询报文后进行DNS解析<ul>
+<li>递归查询</li>
+<li>迭代查询</li>
+</ul>
+</li>
+<li>DNS将解析结果返回给源主机</li>
+</ul>
+</li>
+<li>使用服务器的IP地址建立TCP连接，向服务器发送HTTP请求<ul>
+<li>TCP连接需经过三次握手<ul>
+<li>SYN=1，seq=x；SYN=1，ACK=1，seq=y，ack=x+1；ACK=1，ack=y+1</li>
+</ul>
+</li>
+<li>TCP断开连接需要四次挥手<ul>
+<li>FIN=1，ACK=1，seq=u，ack=v+1；ACK=1，seq=v+1，ack=u+1；FIN=1，ACK=1，seq=x，ack=u+1；ACK=1，seq=u，ack=x+1</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>服务器响应请求</li>
+<li>浏览器收到HTTP响应，进行渲染</li>
+</ul>
 <h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络.md" target="_blank" rel="noopener">https://github.com/CyC2018/CS-Notes/blob/master/notes/计算机网络.md</a><br><a href="https://www.cnblogs.com/buxiangxin/p/8336022.html" target="_blank" rel="noopener">https://www.cnblogs.com/buxiangxin/p/8336022.html</a></p>
 
       
