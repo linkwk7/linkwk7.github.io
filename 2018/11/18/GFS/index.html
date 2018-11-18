@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="简介Google File System是谷歌开发的分布式文件系统，GFS虽然也像之前的分布式文件系统一样希望能够达到较好的性能、扩展性、可靠性、可用性，但是其设计主要是从各种使用GFS的应用的工作负载以及环境来出发的。设计GFS时，开发者对GFS的实际使用环境做出了一系列的假设，包括：  系统构建在很多较为偏移的商业机器上，这些机器很有可能出现错误 GFS存储的文件一般都较大 应用的工作负载主要">
+<meta name="keywords" content="Distributed System,File System">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Google File System">
+<meta property="og:url" content="https://linkwk7.github.io/2018/11/18/GFS/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="简介Google File System是谷歌开发的分布式文件系统，GFS虽然也像之前的分布式文件系统一样希望能够达到较好的性能、扩展性、可靠性、可用性，但是其设计主要是从各种使用GFS的应用的工作负载以及环境来出发的。设计GFS时，开发者对GFS的实际使用环境做出了一系列的假设，包括：  系统构建在很多较为偏移的商业机器上，这些机器很有可能出现错误 GFS存储的文件一般都较大 应用的工作负载主要">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://linkwk7.github.io/2018/11/18/GFS/Arch.PNG">
+<meta property="og:image" content="https://linkwk7.github.io/2018/11/18/GFS/Mutation.PNG">
+<meta property="og:updated_time" content="2018-11-18T09:43:03.979Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Google File System">
+<meta name="twitter:description" content="简介Google File System是谷歌开发的分布式文件系统，GFS虽然也像之前的分布式文件系统一样希望能够达到较好的性能、扩展性、可靠性、可用性，但是其设计主要是从各种使用GFS的应用的工作负载以及环境来出发的。设计GFS时，开发者对GFS的实际使用环境做出了一系列的假设，包括：  系统构建在很多较为偏移的商业机器上，这些机器很有可能出现错误 GFS存储的文件一般都较大 应用的工作负载主要">
+<meta name="twitter:image" content="https://linkwk7.github.io/2018/11/18/GFS/Arch.PNG">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/11/18/GFS/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Google File System | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/11/18/GFS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Google File System
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-11-18 17:40:17 / Modified: 17:43:03" itemprop="dateCreated datePublished" datetime="2018-11-18T17:40:17+08:00">2018-11-18</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/" itemprop="url" rel="index"><span itemprop="name">Distributed System</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/Distributed-File-System/" itemprop="url" rel="index"><span itemprop="name">Distributed File System</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Google File System是谷歌开发的分布式文件系统，GFS虽然也像之前的分布式文件系统一样希望能够达到较好的性能、扩展性、可靠性、可用性，但是其设计主要是从各种使用GFS的应用的工作负载以及环境来出发的。设计GFS时，开发者对GFS的实际使用环境做出了一系列的假设，包括：</p>
+<ul>
+<li>系统构建在很多较为偏移的商业机器上，这些机器很有可能出现错误</li>
+<li>GFS存储的文件一般都较大</li>
+<li>应用的工作负载主要为大量的顺序读取和少量的随机读</li>
+<li>应用的工作负载有大量的顺序写，文件在写入后很少会进行修改</li>
+<li>系统需要有效的处理多个客户端并行向同一个文件尾追加内容的操作，这是由于GFS中很多文件被用作构建生产者消费者队列或多路归并</li>
+<li>保证高的可持续的带宽利用率比保证请求的低延迟更重要</li>
+</ul>
+<a id="more"></a>
+<h2 id="GFS架构"><a href="#GFS架构" class="headerlink" title="GFS架构"></a>GFS架构</h2><p>一个GFS集群由一个Master和多个Chunk Server构成，同时可能有多个客户端来访问这个集群。</p>
+<p><img src="/2018/11/18/GFS/Arch.PNG" alt="GFS 架构"></p>
+<h3 id="Master"><a href="#Master" class="headerlink" title="Master"></a>Master</h3><p>在整个GFS集群中仅会有一个Master，该Master会负责系统元数据的管理，并负责处理一些系统范围内的事件，例如块的租约的管理、文件系统命名空间的管理、垃圾回收等。让系统中仅包含一个Master是为了简化整体系统的设计，让这个Master能够基于全局的信息来进行块的配置以及调度，但由于仅有单个Master可能会导致该机器成为整个系统的瓶颈，也有可能出现由于Master崩溃而导致整个系统不能正常工作的情况的出现，因此GFS在设计时会尽量减少Master的负载，并将Master的重要数据写入磁盘及远程机器中来避免Master的失效影响整个集群的运行。接下来介绍以下GFS的Master主要的功能：</p>
+<h4 id="管理系统元数据"><a href="#管理系统元数据" class="headerlink" title="管理系统元数据"></a>管理系统元数据</h4><p>GFS管理的元数据主要有三类：1)文件及块的命名空间，2)由文件到块的映射，3)块的位置。其中前两种信息除了会保存在内存中还会写入磁盘及远程机器中来防止Master的崩溃，而块的位置则仅在Master启动时从各个Chunk Server中拉取，这样做的原因是为了简化Master的设计，同时由于仅有Chunk Server才有其保存了哪些块的话语权，因此也没必要在Master中保存所有的信息。GFS中为了前两种元信息使用了操作日志(Operation log)来记录所有的对元信息的更改，如果Master崩溃则只需重放日志就可以恢复到原有状态，为了减少重放的时间GFS还对日志设置了检查点。</p>
+<h4 id="系统事件的处理"><a href="#系统事件的处理" class="headerlink" title="系统事件的处理"></a>系统事件的处理</h4><h5 id="命名空间的管理及锁的管理"><a href="#命名空间的管理及锁的管理" class="headerlink" title="命名空间的管理及锁的管理"></a>命名空间的管理及锁的管理</h5><p>由于很多操作如对某个文件夹的快照可能需要较长时间才能完成，因此GFS通过允许同时多个操作的并发及对不同范围的数据加锁来确保一定的顺序。例如某个客户端正要求对/home/user进行快照然后保存至/save/user中，此时GFS需要进行一定的控制来保证此时不会有其他客户端在/home/user文件夹中创建新的文件。该例中，Master会获得/home及/save的读锁以及/home/user的写锁以及/save/user的写锁，如果希望在/home/user中创建文件则需要获得/home及/home/user的读锁以及/home/user/filename的写锁，此时由于无法获取已有的锁，因此无法创建文件。这种锁机制来源于GFS对文件夹的管理特定，因为与传统文件系统不同的是GFS并不会为某个文件夹创建一个特殊的数据结构，这样允许了同一个文件夹内能够进行多个并发的操作，例如创建多个文件。</p>
+<h5 id="块的管理"><a href="#块的管理" class="headerlink" title="块的管理"></a>块的管理</h5><p>Master需要对所有的块进行管理，当新的块创建时需要选择为这个块选择新的位置，当某些Chunk Server负载过高时需要进行块的迁移，某些Chunk Server失效时会进行块的复制来保证可用性。在进行块的创建时需要考虑下列因素：</p>
+<ul>
+<li>将新的块放置在磁盘利用率较低的Chunk Server中</li>
+<li>避免在同一个Chunk Server短期内创建大量的块，因为刚创建的块可能不久后就需要进行写入，从而为该服务器带来较高的负载</li>
+<li>保证块在不同机架(rack)服务器上的分配<ul>
+<li>将数据分不到不同机架上的服务器来避免由于交换机或电力等原因导致多个服务器同时失效，从而提升数据的可靠性和可用性</li>
+<li>最大化网络带宽利用率</li>
+</ul>
+</li>
+</ul>
+<h5 id="垃圾回收"><a href="#垃圾回收" class="headerlink" title="垃圾回收"></a>垃圾回收</h5><p>当GFS中的文件被删除后并不会直接将块回收，而是周期性的让垃圾回收机制来释放实际的物理存储空间。这样可以简化系统的设计并使之可靠性更高。</p>
+<p>当应用删除一个文件时，Master会将这个操作记录到日志中，然后将这个文件重命名。Master会周期性的扫描命名空间，当发现某个文件已经被删除有一段时间了则正式删除这个文件，在此之前该文件尚能被用户恢复。同时Master会周期性的扫描块的命名空间，如果发现某个块并没有被任何一个文件所引用，则删除为这个块保留的元信息，之后在Chunk Server与Master交换心跳包时Chunk Server会告知Master自己存有哪些块，Master会确定其中哪些块已经被删除，然后让Chunk Server删除这些块。使用这种方法进行块的垃圾回收的主要缺点是由于块需要等待一段时间才能真正的从Chunk Server上删除，因此可能导致难以进行存储空间的控制，因此GFS允许用户显式的再次删除文件来立即触发存储空间的回收。</p>
+<h5 id="陈旧的块的检测"><a href="#陈旧的块的检测" class="headerlink" title="陈旧的块的检测"></a>陈旧的块的检测</h5><p>Master会为每个块维护一个版本号(chunk version number)来确定，当Master给出一个块的租约(lease)后会增加这个版本号，并通知所有存储着最新的块的Chunk Server。如果Chunk Server来与Master交换信息时发现其存储的块的版本号过小则认为其存储的是过时的信息，并会在之后的垃圾回收过程中删除这个块。</p>
+<h3 id="客户端操作"><a href="#客户端操作" class="headerlink" title="客户端操作"></a>客户端操作</h3><p>客户端操作流程的设计的出发点是减少各种操作过程中Master的参与，从而降低Master的负载。</p>
+<h4 id="客户端进行读流程"><a href="#客户端进行读流程" class="headerlink" title="客户端进行读流程"></a>客户端进行读流程</h4><ul>
+<li>客户端将需要读写的位置转换为块的序号</li>
+<li>客户端将文件名及块号发送给Master，来查询对应的块的句柄及存储块的所有Chunk Server的位置</li>
+<li>客户端将Master的信息缓存直到过期或文件被重新打开</li>
+<li>客户端将从Chunk Server中选择一个较优的服务器来请求数据</li>
+</ul>
+<h4 id="客户端进行数据变更流程"><a href="#客户端进行数据变更流程" class="headerlink" title="客户端进行数据变更流程"></a>客户端进行数据变更流程</h4><p>当客户端需要进行某个块的内容或者元数据的变更时,如果某个写入请求过大跨过了块的边界，则客户端会将这个写入请求拆分为多个写请求。GFS会保证其中的每个变更能够在块的所有副本上进行，为了保证这一结果，GFS使用了租约(lease)。Master会给与块的某个副本一个租约，并称该副本为Primary，该副本会负责为所有针对该块的变更选择一个顺序，因此全局所有变更的顺序取决于租约的顺序，在同一个租约期内则取决于Primary为变更分配的序列号。</p>
+<p>客户端进行数据变更的流程如下：</p>
+<ul>
+<li>客户端请求Master来获取Primary与其他副本的位置，如果没有副本拥有租约则Master会分配一个</li>
+<li>Master向客户端返回Primary及其他副本的位置，客户端将这些信息缓存起来</li>
+<li>客户端将数据推送给所有的副本，Chunk Server收到数据后会将其缓存至一个LRU的缓存中</li>
+<li>当所有副本都确认收到数据后，客户端将向Primary发送写入请求，Primary会为这个写入请求选择一个序号，并按照序号来应用变更</li>
+<li>Primary将所有的写请求发送至其他副本中</li>
+<li>其他副本收到请求后应用这个写请求并反馈给Primary</li>
+<li>Primary发送回复给客户端，如果任何副本的写入失败都会作为回复的请求发送给客户端</li>
+</ul>
+<p>GFS通过将进行数据修改时的控制流程与数据流程分离来获得较高的性能。修改时的控制流程会是由客户端到Primary，再从Primary到其他所有副本。而在客户端将数据推送到所有副本时，会将所有副本串成一条链，然后数据沿着这条链进行转发，转发时还使用了流水线来降低转发的延迟。</p>
+<h4 id="客户端进行原子性的追加"><a href="#客户端进行原子性的追加" class="headerlink" title="客户端进行原子性的追加"></a>客户端进行原子性的追加</h4><p>由于使用GFS的大多数操作是在某个文件结尾处追加数据，因此GFS提供了一个原子性的追加操作，保证追加的数据能够至少一次原子性的追加在文件结尾。进行原子性追加操作的流程与上一些描述的相同，仅在Primary处稍微有所不同。当追加内容时，如果发现此次的追加会导致越过块的边界，如果是则将块的剩余空间填满，然后告知客户端在下一个块进行重试，当让每次追加的内容的大小最大是块的1/4，因此不会出现一致填充的情况；如果没有越过边界，则Primary将数据添加至块的尾部，然后告诉所有副本在相同偏移处写入同样的数据。如果某个副本的追加操作失败了，则客户端会重试该操作，因此此时可能出现同一个块的不同副本之间内容并不是完全一致的情况。</p>
+<h4 id="快照"><a href="#快照" class="headerlink" title="快照"></a>快照</h4><p>GFS进行快照的速度非常快，其在进行快照时会使用Copy-On-Write来减少懒惰的进行复制。当Master收到快照请求时会首先取消所有已有的租约，之后所有客户端与对应块的读写都需要与Master进行沟通，因此Master可以在收到请求后才进行块的复制。</p>
+<h3 id="一致性模型"><a href="#一致性模型" class="headerlink" title="一致性模型"></a>一致性模型</h3><p>为了讨论GFS的一致性模型必须首先定义以两个词。一致(Consistent)，如果文件的某个部分在所有客户端无论访问那个副本都会获取相同的数据则称其是一致的。定义的(Defined)，如果如果一个文件内容的变更是一致的，且所有客户端可以看到其所有的变更内容则称其是定义的。</p>
+<p>如果仅有单个客户端在向该区域写数据则其是定义的，如果由多个客户端同时对某个区域进行写入，且操作都成功了，则其是一致的，但可能不是良好定义的，因为其可能混合这多个客户端的写入。如果对某个区域的写入失败了，则其是不一致的。</p>
+<p><img src="/2018/11/18/GFS/Mutation.PNG" alt="数据修改后文件状态"></p>
+<p>接下来简要介绍上图。序列化的写入一致是良好定义的，因为客户端会在一个位置进行写入操作并成功，保证所有的副本在该位置的内容都是一致的，且由于没有其他客户端并发的写入，所以一定能反映该客户端的所有修改。序列化的追加最后一个位置是有良好定义的，但其中某些部分可能是不一致的，该原因可能是客户端尝试追加操作失败，导致不同副本的不一致，但之后重试时会在相同的偏移处追加相同的数据，然后成功，但前面可能有部分数据不一致的情况。并发成功的写入是一致但不是良好定义的，因为写入操作可能由于过大被拆分为针对多个块的写入，因此每个块都是一致的，但是没有反映任何一个客户端的写入内容。并发追加也是部分是良好定义的，但其之后可能有些部分是不一致的，情况同序列化追加一致。</p>
+<h3 id="容错"><a href="#容错" class="headerlink" title="容错"></a>容错</h3><p>为了保证在各种机器出错情况下GFS的可用性，GFS将块进行复制，并将其分布到不同的机架上，并将Master的状态进行复制，当已有Master失效时会启动新的Master，然后根据日志来构建状态。同时GFS还提供一些shadow master来提供一些稍旧的信息。为了保证存储的信息没有损坏，GFS会为数据计算校验来检验数据是否已损毁。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Distributed-System/" rel="tag"># Distributed System</a>
+          
+            <a href="/tags/File-System/" rel="tag"># File System</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/04/网络知识点总结/" rel="next" title="网络知识点总结">
+                <i class="fa fa-chevron-left"></i> 网络知识点总结
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">14</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">11</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">13</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GFS架构"><span class="nav-number">2.</span> <span class="nav-text">GFS架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Master"><span class="nav-number">2.1.</span> <span class="nav-text">Master</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#管理系统元数据"><span class="nav-number">2.1.1.</span> <span class="nav-text">管理系统元数据</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#系统事件的处理"><span class="nav-number">2.1.2.</span> <span class="nav-text">系统事件的处理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#命名空间的管理及锁的管理"><span class="nav-number">2.1.2.1.</span> <span class="nav-text">命名空间的管理及锁的管理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#块的管理"><span class="nav-number">2.1.2.2.</span> <span class="nav-text">块的管理</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#垃圾回收"><span class="nav-number">2.1.2.3.</span> <span class="nav-text">垃圾回收</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#陈旧的块的检测"><span class="nav-number">2.1.2.4.</span> <span class="nav-text">陈旧的块的检测</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端操作"><span class="nav-number">2.2.</span> <span class="nav-text">客户端操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#客户端进行读流程"><span class="nav-number">2.2.1.</span> <span class="nav-text">客户端进行读流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#客户端进行数据变更流程"><span class="nav-number">2.2.2.</span> <span class="nav-text">客户端进行数据变更流程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#客户端进行原子性的追加"><span class="nav-number">2.2.3.</span> <span class="nav-text">客户端进行原子性的追加</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#快照"><span class="nav-number">2.2.4.</span> <span class="nav-text">快照</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一致性模型"><span class="nav-number">2.3.</span> <span class="nav-text">一致性模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#容错"><span class="nav-number">2.4.</span> <span class="nav-text">容错</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
