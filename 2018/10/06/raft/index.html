@@ -117,7 +117,7 @@
 <meta property="og:description" content="RaftIntro共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题所述，该算法的一个首要目标就是容易理解。 接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部">
 <meta property="og:locale" content="en">
 <meta property="og:image" content="https://linkwk7.github.io/2018/10/06/raft/0.PNG">
-<meta property="og:updated_time" content="2018-10-24T08:08:45.016Z">
+<meta property="og:updated_time" content="2018-11-29T10:54:17.366Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Raft">
 <meta name="twitter:description" content="RaftIntro共识算法让一组共同协作的计算机在其中一部分失效后也能继续工作下去，因此共识算法被应用于大规模的可靠软件系统中。在之前该领域使用的大都是Paxos，或者是在Paxos的影响之下设计出来的，但是Paxos较为难理解，因而更难实现，因而有人提出了Raft。正如其论文标题所述，该算法的一个首要目标就是容易理解。 接下来先简要介绍一下这个共识算法，该算法的主要流程可以分为两个部分，第一个部">
@@ -366,7 +366,7 @@
                 
                   <span class="post-meta-item-text">Edited on</span>
                 
-                <time title="Modified: 2018-10-24 16:08:45" itemprop="dateModified" datetime="2018-10-24T16:08:45+08:00">2018-10-24</time>
+                <time title="Modified: 2018-11-29 18:54:17" itemprop="dateModified" datetime="2018-11-29T18:54:17+08:00">2018-11-29</time>
               
             
           </span>
@@ -447,6 +447,20 @@
 <h3 id="Leader完整性"><a href="#Leader完整性" class="headerlink" title="Leader完整性"></a>Leader完整性</h3><p>如果一个日志条目在term i被提交，那么这个日志条目会出现在所有term高于i的leader中。这一性质来自于一个candidate如果希望成为leader需要得到大多数节点的投票，因此该candidate的日志比大多数节点都新，同时由于该日志条目已经commit，因此会出现在大多数节点中，因此leader一定会包含该日志条目。</p>
 <h3 id="状态机安全性"><a href="#状态机安全性" class="headerlink" title="状态机安全性"></a>状态机安全性</h3><p>如果一个服务器在一个序号处应用了一条指令，那么所有状态机在该序号处都会应用同样的指令。该性质可由Leader完整性得来。</p>
 <h2 id="日志压缩"><a href="#日志压缩" class="headerlink" title="日志压缩"></a>日志压缩</h2><p>raft可以使用快照来消减日志所占的存储空间，通过记录状态机的状态，从而可以安全的删除在进行快照时已经被应用的日志。每个节点会独立的进行快照，但leader可能将自己的快照发送给落后较多的节点来更新其状态。</p>
+<h2 id="成员变更"><a href="#成员变更" class="headerlink" title="成员变更"></a>成员变更</h2><p>Raft支持成员的动态变更，最简单的成员变更方法是将整个集群下线，然后更新其配置文件，在重新启动该集群，但这需要手动操作，因此带来了很多的不可控因素。Raft利用Joint Consensus来支持成员的动态变更，其保证在任何时间，对同一个Term最多仅有一个Leader。</p>
+<p>Raft为进行配置变更，会首先进入Joint Consensus状态，在该状态中：</p>
+<ul>
+<li>日志条目会复制到旧配置所指定的成员以及新配置所指定的成员中<ul>
+<li>日志条目需要复制到新配置指定的成员中：需要将已有的日志条目复制到新的成员中</li>
+<li>日志条目需要复制到旧配置指定的成员中：</li>
+</ul>
+</li>
+<li>任何一个配置的成员都能称为Leader</li>
+<li>任何共识需要得到旧配置的大多数成员以及新配置的大多数成员的同意</li>
+</ul>
+<p>当Leader收到配置变更请求后会生成一个新的配置C&lt;old,new&gt;并利用Raft将该日志条目复制到集群中。当一个Follower发现C&lt;old,new&gt;后，其也会利用该配置进行进一步的共识(用于Leader Election)，此时由于Leader 处于Joint Consensus状态，因此其也会将该日志条目复制给新配置所指定的集群成员，因而保证如果该日志条目被Commit，则新配置所指定的大多数成员拥有所有已有的日志。当C&lt;old,new&gt;被Commit后，标识新配置所指定的大多数成员都已经拥有了所有的日志，旧配置所指定的大多数成员也拥有该配置变更信息。此时由于Leader election选举出的节点必定有该日志条目，因此此时旧配置所指定的成员以及新配置的成员都不能单独进行共识，必须另一个配置所指定的成员的允许，此时Leader开始共识C<new>来进行配置变更的第二阶段，当Follower收到该日志后如果发现自己已经不属于集群则停止消息响应。当该日志条目被Commit后则旧配置所指定的大多数成员已经停止响应，无法进行新的条目的共识。</new></p>
+<p>我对需要进行第二阶段共识的理解是，由于第一阶段进行C&lt;old,new&gt;的共识过程中可能有其他的用户请求，这些请求可能并没有被完全复制到新的配置所指定的成员中，而C&lt;old,new&gt;的Commit仅能保证该日志之前的所有条目被复制到新的集群中，而之间所有的请求可能仅复制到了一小部分新配置所指定的成员，而此时如果直接在C&lt;old,new&gt;Commit时直接让旧配置所指定的成员停止消息响应则可能丢失很多用户的请求，因此需要开始一个新条目的共识来保证之前的所有的日志条目被复制到新配置所指定的成员中。</p>
+<p>但目前我有一个问题，能否在C&lt;old,new&gt;Commit后让旧配置存在的节点停止响应消息，而新配置的成员将仅使用新配置指定的成员进行共识，从而避免为C<new>进行共识的过程?</new></p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>该篇博客仅对raft的一些基础性质和原理进行介绍，具体执行流程可以参见论文，raft的配置变更也没有进行介绍，希望能够给正在了解raft的人提供一些帮助。</p>
 
       
@@ -690,7 +704,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Raft"><span class="nav-number">1.</span> <span class="nav-text">Raft</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intro"><span class="nav-number">1.1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Leader-Election"><span class="nav-number">1.2.</span> <span class="nav-text">Leader Election</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Log-Replication"><span class="nav-number">1.3.</span> <span class="nav-text">Log Replication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Safety"><span class="nav-number">1.4.</span> <span class="nav-text">Safety</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#选举安全性"><span class="nav-number">1.4.1.</span> <span class="nav-text">选举安全性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader仅添加日志"><span class="nav-number">1.4.2.</span> <span class="nav-text">Leader仅添加日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader完整性"><span class="nav-number">1.4.3.</span> <span class="nav-text">Leader完整性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#状态机安全性"><span class="nav-number">1.4.4.</span> <span class="nav-text">状态机安全性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#日志压缩"><span class="nav-number">1.5.</span> <span class="nav-text">日志压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Raft"><span class="nav-number">1.</span> <span class="nav-text">Raft</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Intro"><span class="nav-number">1.1.</span> <span class="nav-text">Intro</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Leader-Election"><span class="nav-number">1.2.</span> <span class="nav-text">Leader Election</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Log-Replication"><span class="nav-number">1.3.</span> <span class="nav-text">Log Replication</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Safety"><span class="nav-number">1.4.</span> <span class="nav-text">Safety</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#选举安全性"><span class="nav-number">1.4.1.</span> <span class="nav-text">选举安全性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader仅添加日志"><span class="nav-number">1.4.2.</span> <span class="nav-text">Leader仅添加日志</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Leader完整性"><span class="nav-number">1.4.3.</span> <span class="nav-text">Leader完整性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#状态机安全性"><span class="nav-number">1.4.4.</span> <span class="nav-text">状态机安全性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#日志压缩"><span class="nav-number">1.5.</span> <span class="nav-text">日志压缩</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#成员变更"><span class="nav-number">1.6.</span> <span class="nav-text">成员变更</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">1.7.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
             
 
           </div>
