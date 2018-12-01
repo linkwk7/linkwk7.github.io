@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.4.1" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=6.4.1">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=6.4.1">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.1" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '6.4.1',
+    sidebar: {"position":"right","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="简介Dynamo是亚马逊的一个高可用的分布式KV数据库，其需要为用户提供一种一直在线的状态。同时由于该数据库需要适应不同的场景，因此需要允许用户通过对Dynamo进行配置来决定其高可用性与性能之间的平衡。为了保证Dynamo为达成高可用性和可扩展性使用了一系列技术，包括：使用一致性哈希来对数据进行分割和复制，使用版本来保证存储对象的一致性，使用一个大多数(quorum-like)的技术及无中心化的">
+<meta name="keywords" content="Database,Distributed System">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dynamo">
+<meta property="og:url" content="https://linkwk7.github.io/2018/12/01/Dynamo/index.html">
+<meta property="og:site_name" content="Linkwk7">
+<meta property="og:description" content="简介Dynamo是亚马逊的一个高可用的分布式KV数据库，其需要为用户提供一种一直在线的状态。同时由于该数据库需要适应不同的场景，因此需要允许用户通过对Dynamo进行配置来决定其高可用性与性能之间的平衡。为了保证Dynamo为达成高可用性和可扩展性使用了一系列技术，包括：使用一致性哈希来对数据进行分割和复制，使用版本来保证存储对象的一致性，使用一个大多数(quorum-like)的技术及无中心化的">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-12-01T10:50:24.299Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Dynamo">
+<meta name="twitter:description" content="简介Dynamo是亚马逊的一个高可用的分布式KV数据库，其需要为用户提供一种一直在线的状态。同时由于该数据库需要适应不同的场景，因此需要允许用户通过对Dynamo进行配置来决定其高可用性与性能之间的平衡。为了保证Dynamo为达成高可用性和可扩展性使用了一系列技术，包括：使用一致性哈希来对数据进行分割和复制，使用版本来保证存储对象的一致性，使用一个大多数(quorum-like)的技术及无中心化的">
+
+
+
+
+
+
+  <link rel="canonical" href="https://linkwk7.github.io/2018/12/01/Dynamo/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Dynamo | Linkwk7</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-right page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Linkwk7</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="Toggle navigation bar">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br />Home</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-about">
+    <a href="/about/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-user"></i> <br />About</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />Tags</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br />Categories</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />Archives</a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/12/01/Dynamo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Linkwk7">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Linkwk7">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Dynamo
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+
+              
+                
+              
+
+              <time title="Created: 2018-12-01 18:38:54 / Modified: 18:50:24" itemprop="dateCreated datePublished" datetime="2018-12-01T18:38:54+08:00">2018-12-01</time>
+            
+
+            
+              
+
+              
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/" itemprop="url" rel="index"><span itemprop="name">Programming</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/" itemprop="url" rel="index"><span itemprop="name">Distributed System</span></a></span>
+
+                
+                
+                  , 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Programming/Distributed-System/Distributed-Database/" itemprop="url" rel="index"><span itemprop="name">Distributed Database</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>Dynamo是亚马逊的一个高可用的分布式KV数据库，其需要为用户提供一种一直在线的状态。同时由于该数据库需要适应不同的场景，因此需要允许用户通过对Dynamo进行配置来决定其高可用性与性能之间的平衡。为了保证Dynamo为达成高可用性和可扩展性使用了一系列技术，包括：使用一致性哈希来对数据进行分割和复制，使用版本来保证存储对象的一致性，使用一个大多数(quorum-like)的技术及无中心化的副本同步协议来保证副本更新时的一致性，基于Gossip的分布式错误监测及成员变更协议。</p>
+<a id="more"></a>
+<p>Dynamo针对如下需求：</p>
+<ul>
+<li>查询模型：所有操作都是针对某个键值的查询与写入，所有操作都仅影响一个元素</li>
+<li>ACID：如果需要支持ACID的所有特性则会导致系统可用性较差，因此Dynamo仅支持较弱的一致性从而获得更高的可用性，同时也不保证隔离性</li>
+<li>效率：系统能够在商用机器上运行并达到延迟、吞吐量等要求</li>
+<li>系统运行在可信环境中，因此为非拜占庭容错</li>
+</ul>
+<p>开发者在设计Dynamo时，为了保证系统拥有较高的可用性，使用了乐观复制技术，允许用户的变更在后台传输，但这样可能导致某些变更之间存在冲突，因此Dynamo通过允许对冲突进行解决来保证整个系统的最终一致性。为了解决不同变更之间的冲突，需要考虑两个问题，一个是由谁来解决变更之间的冲突，另一个是何时来解决这些冲突。针对第一个问题，解决冲突的可以是系统本身也可以是客户，如果让系统本身来解决这个冲突则可能仅支持少数几种策略，例如写入时间较晚的作为最终结果，而让用户来解决这个问题则可以根据实际场景选择最优的策略。针对何时解决冲突的问题，Dynamo为了保证“一直可写”将冲突解决放在了读操作时。同时Dynamo还要求能够支持扩展的递增(Incremental scalability)，即以此能够添加一个存储节点；对称性，即所有节点所提供的功能都是相同的；无中心化，尽可能的使用点对点技术而非中心化的技术；异构性，支持底层异构的节点，允许根据节点的实际处理能力给予相应的负载。</p>
+<h1 id="系统架构"><a href="#系统架构" class="headerlink" title="系统架构"></a>系统架构</h1><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>技术</th>
+<th>优势</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>数据分割</td>
+<td>一致性哈希</td>
+<td>支持递增可扩展性</td>
+</tr>
+<tr>
+<td>写的高可用性</td>
+<td>向量钟以及读操作时的调节</td>
+<td>版本大小与更新速度的解耦</td>
+</tr>
+<tr>
+<td>处理短暂时间的错误</td>
+<td>Sloppy Quorum和带有提示的转交</td>
+<td>提供高可用性及持久性</td>
+</tr>
+<tr>
+<td>由永久错误中恢复</td>
+<td>使用Merkle树的复制协议</td>
+<td>在后台同步产生分歧的副本</td>
+</tr>
+<tr>
+<td>成员变更及错误检测</td>
+<td>给予Gossip协议的成员变更和错误检测</td>
+<td>保证对称性以及去中性化的特性</td>
+</tr>
+</tbody>
+</table>
+<h2 id="系统接口"><a href="#系统接口" class="headerlink" title="系统接口"></a>系统接口</h2><p>Dynamo所提供的接口仅有put与get，其中get会找到对应的键值对，然后返回一个或多个互相冲突的值，并返回一个上下文，其中包含了系统的元信息，例如多个相互冲突的值对应的向量钟。put操作需要用户指定需要修改的键、值以及对应的上下文。</p>
+<h2 id="分割算法"><a href="#分割算法" class="headerlink" title="分割算法"></a>分割算法</h2><p>Dynamo使用一致性哈希来进行数据的分割，其将哈希空间视为一个环，每个节点会赋予一个标号将其映射到环上。通过将键进行哈希，然后在哈希环上进行顺时针查找，遇到的第一个节点会负责对应键值对的存储。因此实际上每个节点负责的键值空间是该节点的标号以及其在环上的前驱节点的标号之间的所有键值对。但是由于假设每个节点仅拥有一个标号则很容易出现节点负载不均衡的情况，因此可以给予每个物理节点多个虚拟节点，每个节点均映射到哈希环中，从而保证以下几点优势：</p>
+<ul>
+<li>当一个节点下线后，那么其原有负载可以平均的转移到剩余节点中</li>
+<li>当一个节点上线后，新的节点可以从其他节点处获得相对均衡的负载</li>
+<li>可以根据每个物理节点的不同性能来选择其拥有的虚拟节点的数量</li>
+</ul>
+<p>Dynamo的分割算法存在三种，第一种是每个物理节点有T个标号，使用标号来分割哈希环，该方法由于在成员变更时需要修改多个节点的键值范围从而需要重新计算Merkle树等信息；第二种是每个物理节点T个标号，哈希环被分割为很多固定大小的块；第三种是将哈希环分割为固定大小的块，每个物理节点有相同数量的标号。</p>
+<h2 id="复制"><a href="#复制" class="headerlink" title="复制"></a>复制</h2><p>为了保证可用性和可持久性，Dynamo会将数据复制到多个物理节点中。每个键均会被分配到一个协调者节点上，该协调者会负责其键值范围内所有的键值对的复制。每个Dynamo集群均可配置副本数量N，协调者会在键值变更后储存到本地并将其复制到在哈希环中标号在其之后的N-1个物理节点，因此每个节点负责存储的键值范围是其前第N个节点对应的标号及自己标号之间的所有键值对。</p>
+<p>负责存储某个键值对存储的所有节点的列表被称为偏好列表，Dynamo设计为每个节点都能确定某个键值所对应的偏好列表。为了防止节点失效，偏好列表里一般会包含多于N个节点，同时为了防止多个虚拟节点存在于同一个物理节点，因此偏好列表会跳过存在于同一个物理节点上的虚拟节点。</p>
+<h2 id="数据版本控制"><a href="#数据版本控制" class="headerlink" title="数据版本控制"></a>数据版本控制</h2><p>由于Dynamo支持最终一致性，因此允许数据变更在后台异步的传播，一个put操作可能在其数据没有复制到所有的节点前就返回给调用者，因此可能导致之后的get操作无法看见最新的修改。由于Dynamo需要保证较高的写的可用性，因此其支持对数据进行版本的标号，并允许系统中在同一时间存在多个版本的数据并在以后进行数据的重新组合。在大多数时间里，Dynamo会利用新生成的数据替换掉旧的数据，这一关系由向量时钟来确定，但在一些情况下可能出现数据处于多个分支的情况，这时无法使用向量时钟来确定这写数据副本之间的关系，此时需要客户根据指定的策略来进行数据的重建。</p>
+<p>客户希望更新一个数据时需要指定其版本，该版本可以从读取操作获得的上下文中取得。此时如果读取操作返回了多个值则客户端应当对其进行组合。</p>
+<h2 id="get-put执行流程"><a href="#get-put执行流程" class="headerlink" title="get/put执行流程"></a>get/put执行流程</h2><p>用户为了执行操作必须先选择一个节点作为协调者，选择节点有两种方式，第一钟是使用独立的负载均衡器来选择合适的节点，第二种是让客户端拥有足够的信息从而自行选择节点。针对读请求，任何节点均可作为该请求的协调者。而针对写请求，如果收到请求的节点处于对应键值的偏好列表中则处理该请求，否则将其转发给对应节点，这是因为节点为了写入新的值需要生成新的向量钟。</p>
+<p>为了保证副本的一致性，Dynamo使用了一个类似Quorum系统的一致性协议，其有两个可配置的值R与W。R标识最少需要多少节点的相应才能够完成一个读操作，W标识最少需要多少节点才能够完成一个写操作。如果R+W&gt;N则其是一个Quorum的系统，但一般为了保证交易的延迟会设置R+W&lt;N。当收到一个put请求后，该请求的协调者会生成新版本的数据，并修改该数据对应的向量钟，之后将数据发送给N个节点，如果有W-1个节点响应则认为该写操作已经成功可以返回。读操作的流程类似。</p>
+<h2 id="处理临时错误：带有提示的转交"><a href="#处理临时错误：带有提示的转交" class="headerlink" title="处理临时错误：带有提示的转交"></a>处理临时错误：带有提示的转交</h2><p>当出现服务器故障或者网络分割等情况，Dynamo使用sloppy quorum，其保证读操作或者写操作发生在偏好列表中的前N个可达节点。如果某个节点下线，则原本发送给其的数据会发送给偏好列表中的其他节点，这个节点收到对应的数据后会周期性的检测原有节点是否已经恢复，如果已经恢复则将数据发送给原有节点并将数据从本地删除。</p>
+<h2 id="处理永久错误：副本同步"><a href="#处理永久错误：副本同步" class="headerlink" title="处理永久错误：副本同步"></a>处理永久错误：副本同步</h2><p>每个节点针对其负责的键值空间建立Merkle树，树的叶子节点是对用的键值，当两个节点需要进行同步时，其可通过交换Merkle树来确定需要同步的数据。</p>
+<h2 id="成员管理"><a href="#成员管理" class="headerlink" title="成员管理"></a>成员管理</h2><p>Dynamo使用一种显示的机制来让节点加入或退出哈希环，管理员会使用一工具连接到已有的一个节点并发出加入或删除节点的命令，之后该节点会将这个成员变更的信息记录在本地，之后使用一基于Gossip的协议将这个变更传播出去。每个节点会定期选择一个随机节点来获取其成员关系，从而更新自身的成员管理列表。</p>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Database/" rel="tag"># Database</a>
+          
+            <a href="/tags/Distributed-System/" rel="tag"># Distributed System</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/18/GFS/" rel="next" title="Google File System">
+                <i class="fa fa-chevron-left"></i> Google File System
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="Linkwk7" />
+            
+              <p class="site-author-name" itemprop="name">Linkwk7</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">posts</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">categories</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">13</span>
+                    <span class="site-state-item-name">tags</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/linkwk7" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#系统架构"><span class="nav-number">2.</span> <span class="nav-text">系统架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#系统接口"><span class="nav-number">2.1.</span> <span class="nav-text">系统接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#分割算法"><span class="nav-number">2.2.</span> <span class="nav-text">分割算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#复制"><span class="nav-number">2.3.</span> <span class="nav-text">复制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据版本控制"><span class="nav-number">2.4.</span> <span class="nav-text">数据版本控制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get-put执行流程"><span class="nav-number">2.5.</span> <span class="nav-text">get/put执行流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理临时错误：带有提示的转交"><span class="nav-number">2.6.</span> <span class="nav-text">处理临时错误：带有提示的转交</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理永久错误：副本同步"><span class="nav-number">2.7.</span> <span class="nav-text">处理永久错误：副本同步</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#成员管理"><span class="nav-number">2.8.</span> <span class="nav-text">成员管理</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-snowflake-o"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Linkwk7</span>
+
+  
+
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.1"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
