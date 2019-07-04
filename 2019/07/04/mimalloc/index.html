@@ -108,25 +108,25 @@
 
 
 
-  <meta name="description" content="死锁简介死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。 必要条件 互斥：每个资源要么已经分配给了一个进程要么是可用的 占有和等待：已经得到某种资源的进程可以继续请求其他资源 不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资">
+  <meta name="description" content="MIMALLOCallocator最开始的时候主要专注于加快内存分配的速度并减少内存消耗，或者支持更多并发的线程操作，而很少有设计专注于分配的内存的局部性上。而Mimalloc认为其在保证了分配的内存的局部性的前提下也可以有很好的性能以及并发可扩展性。那么为什么要让malloc分配的内存更具有局部性呢，这可以在一些函数式编程语言的分配模式中找到根据，因为在函数式编程语言中会分配和释放很多大小较小的">
 <meta name="keywords" content="Operating System">
 <meta property="og:type" content="article">
-<meta property="og:title" content="死锁">
-<meta property="og:url" content="https://linkwk7.github.io/2018/10/26/死锁/index.html">
+<meta property="og:title" content="mimalloc">
+<meta property="og:url" content="https://linkwk7.github.io/2019/07/04/mimalloc/index.html">
 <meta property="og:site_name" content="Linkwk7">
-<meta property="og:description" content="死锁简介死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。 必要条件 互斥：每个资源要么已经分配给了一个进程要么是可用的 占有和等待：已经得到某种资源的进程可以继续请求其他资源 不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资">
+<meta property="og:description" content="MIMALLOCallocator最开始的时候主要专注于加快内存分配的速度并减少内存消耗，或者支持更多并发的线程操作，而很少有设计专注于分配的内存的局部性上。而Mimalloc认为其在保证了分配的内存的局部性的前提下也可以有很好的性能以及并发可扩展性。那么为什么要让malloc分配的内存更具有局部性呢，这可以在一些函数式编程语言的分配模式中找到根据，因为在函数式编程语言中会分配和释放很多大小较小的">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-10-26T10:53:10.415Z">
+<meta property="og:updated_time" content="2019-07-04T13:08:19.086Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="死锁">
-<meta name="twitter:description" content="死锁简介死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。 必要条件 互斥：每个资源要么已经分配给了一个进程要么是可用的 占有和等待：已经得到某种资源的进程可以继续请求其他资源 不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资">
+<meta name="twitter:title" content="mimalloc">
+<meta name="twitter:description" content="MIMALLOCallocator最开始的时候主要专注于加快内存分配的速度并减少内存消耗，或者支持更多并发的线程操作，而很少有设计专注于分配的内存的局部性上。而Mimalloc认为其在保证了分配的内存的局部性的前提下也可以有很好的性能以及并发可扩展性。那么为什么要让malloc分配的内存更具有局部性呢，这可以在一些函数式编程语言的分配模式中找到根据，因为在函数式编程语言中会分配和释放很多大小较小的">
 
 
 
 
 
 
-  <link rel="canonical" href="https://linkwk7.github.io/2018/10/26/死锁/"/>
+  <link rel="canonical" href="https://linkwk7.github.io/2019/07/04/mimalloc/"/>
 
 
 
@@ -136,7 +136,7 @@
   };
 </script>
 
-  <title>死锁 | Linkwk7</title>
+  <title>mimalloc | Linkwk7</title>
   
 
 
@@ -305,7 +305,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/26/死锁/">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2019/07/04/mimalloc/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Linkwk7">
@@ -322,7 +322,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">死锁
+          <h1 class="post-title" itemprop="name headline">mimalloc
               
             
           </h1>
@@ -347,7 +347,7 @@
                 
               
 
-              <time title="Created: 2018-10-26 18:51:33 / Modified: 18:53:10" itemprop="dateCreated datePublished" datetime="2018-10-26T18:51:33+08:00">2018-10-26</time>
+              <time title="Created: 2019-07-04 21:06:14 / Modified: 21:08:19" itemprop="dateCreated datePublished" datetime="2019-07-04T21:06:14+08:00">2019-07-04</time>
             
 
             
@@ -418,20 +418,21 @@
       
 
       
-        <h1 id="死锁"><a href="#死锁" class="headerlink" title="死锁"></a>死锁</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>死锁是指两个或者两个以上的进程在执行过程中，由于竞争资源或者由于彼此通信造成的一种阻塞现象，如果没有外力的作用，这些进程无法进行继续的工作，此时称系统产生了死锁，这些永远在互相等待的进程被称为死锁进程。</p>
-<h2 id="必要条件"><a href="#必要条件" class="headerlink" title="必要条件"></a>必要条件</h2><ul>
-<li>互斥：每个资源要么已经分配给了一个进程要么是可用的</li>
-<li>占有和等待：已经得到某种资源的进程可以继续请求其他资源</li>
-<li>不可抢占：已经分配给某个进程的资源不能够被强制的剥夺，仅能等待拥有该资源的进程主动释放资源</li>
-<li>环路等待：由两个或两个以上的进程形成一个环路，环路中每个进程都在等待下一个进程所拥有的资源</li>
-</ul>
+        <h1 id="MIMALLOC"><a href="#MIMALLOC" class="headerlink" title="MIMALLOC"></a>MIMALLOC</h1><p>allocator最开始的时候主要专注于加快内存分配的速度并减少内存消耗，或者支持更多并发的线程操作，而很少有设计专注于分配的内存的局部性上。而Mimalloc认为其在保证了分配的内存的局部性的前提下也可以有很好的性能以及并发可扩展性。那么为什么要让malloc分配的内存更具有局部性呢，这可以在一些函数式编程语言的分配模式中找到根据，因为在函数式编程语言中会分配和释放很多大小较小的对象，而那些为每类大小使用一个空闲块列表的allocator的空闲块的空间局部性会较差。为了保证内存分配的空间局部性，Mimalloc将空间块列表进行分片。其将堆分为多种大小的页，每个页中有一个空闲块列表，从而在分配某个大小的对象时会尽量从同一个页中进行分配，从而保证更好的空间局部性。</p>
+<p>Mimalloc在实现时并没有使用bump pointer来做初始的内存分配，因为其在加入bump pointer后需要在内存分配的调用中再多加上一次条件判断，其测试结果显示加上bump pointer导致了分配的速度下降了约2%，而且出于安全考虑，allocator不应该让每次内存分配的地址过于容易预测。</p>
 <a id="more"></a>
-<h2 id="处理方法"><a href="#处理方法" class="headerlink" title="处理方法"></a>处理方法</h2><p>针对死锁我们可以从多个方面来避免系统因死锁而收到影响。</p>
-<h3 id="鸵鸟策略"><a href="#鸵鸟策略" class="headerlink" title="鸵鸟策略"></a>鸵鸟策略</h3><p>首先我们可以完全不管，因此如果死锁发生的概率很低或者即使发生了死锁也不会对用户带来多大的影响则可以直接忽略它，从而获得更高的性能。</p>
-<h3 id="死锁检测与死锁恢复"><a href="#死锁检测与死锁恢复" class="headerlink" title="死锁检测与死锁恢复"></a>死锁检测与死锁恢复</h3><p>这种方法并不会避免死锁的发生，而是不断检测死锁，当发现系统进入死锁状态后采取一定措施进行恢复。死锁的检测可以大致分为两类，第一种是每种类型仅有一个资源的死锁检测，这种情况下可以构造出进程对资源的占有和请求的一张有向图，如果在这张有向图中检测出了环则证明发生了死锁。第二种是利用资源分配表，构造出如下数据表项：E向量(资源总量)，A向量(资源剩余量)，C矩阵(每个进程拥有的资源数)，R矩阵(每个进程请求的资源数量)，算法的流程可以描述为：1)寻找一个尚未标记为可完成的进程，且其请求的资源数小于A，2)找到进程后将C矩阵的第i行加到A中，并标记进程为已完成，继续1，3)如果没有找到可以完成运行的进程则终止。</p>
-<p>如果检测到死锁发生后则需要进行死锁恢复，在进行恢复时可以利用抢占进行恢复；利用回滚恢复；通过杀死进程进行恢复。</p>
-<h3 id="死锁预防"><a href="#死锁预防" class="headerlink" title="死锁预防"></a>死锁预防</h3><p>这种方法希望能够在死锁发生前通过破坏死锁的必要条件来避免死锁的发生。其根据死锁的必要条件分为四种，1)破坏互斥条件，例如假脱机打印技术，让多个进程均允许请求打印机，2)破坏占有和等待条件，例如要求所有进程在运行前必须请求所有的资源，3)破坏不可抢占条件，4)破坏环路等待条件，例如给资源编号，进程仅能允许按照编号顺序来请求资源。</p>
-<h3 id="死锁避免"><a href="#死锁避免" class="headerlink" title="死锁避免"></a>死锁避免</h3><p>死锁避免发生在进程运行时，系统保证所有进程运行在安全状态，所谓安全状态表示即使所有进程突然最大程度的请求资源，系统也可以以一定的顺序调度进程，让所有进程均能够运行完成。死锁避免可以使用银行家算法，每次进行资源分配时均检查如果进行该次资源分配不会导致系统进入不安全状态则进行该资源的分配，否则则拒绝分配资源。当然需要注意的是系统进入不安全状态并不一定表示系统会出现死锁。</p>
+<h1 id="结构"><a href="#结构" class="headerlink" title="结构"></a>结构</h1><h2 id="LocalFreeList"><a href="#LocalFreeList" class="headerlink" title="LocalFreeList"></a>LocalFreeList</h2><p>Mimalloc希望能够限制最坏情况下进行内存分配于回收的时间。尤其是在释放一个非常大的对象时，Mimalloc希望能够限制由于递归的释放子对象带来的开销，从而避免一次性的释放带来的较长的停顿。因此Mimalloc使用了一个计数器，当一次回收的调用次数过多时将剩余的需要释放的对象放入一延迟释放列表中。然后当allocator需要更多空闲空间时会调用一deferred_free的回调函数来从延迟释放列表中获取更多的可用空间。</p>
+<p>Mimalloc希望保证间隔一段时间就会调用一次generic_allocation来完成如下操作：</p>
+<ul>
+<li>完成推迟的free请求(避免由于一次销毁一个较大的对象带来大量的free操作的开销)</li>
+<li>维持一个确定性的心跳(在一定次数的malloc操作后)</li>
+<li>回收ThreadFreeList中的空闲区域</li>
+</ul>
+<p>因此Mimalloc为每个Mimalloc页加入了一个LocalFreeList，在平时进行分配时从FreeList中取得空闲区块，如果拥有该页的线程需要释放一个空闲区块则将其加入LocalFreeList中(在其他线程中释放内存的请求会将空闲块加入其他空闲列表)，因此在进行一定次数的分配后FreeList为空，从而Mimalloc主动调用一次generic_allocation来进行上述回收操作。</p>
+<h2 id="ThreadFreeList"><a href="#ThreadFreeList" class="headerlink" title="ThreadFreeList"></a>ThreadFreeList</h2><p>由于每个页都是属于一个Thread Local的堆的，因此在堆上分配内存时并不需要使用锁，但是内存的释放可能在其他线程进行，因此Mimalloc加入了ThreadFreeList，让其他线程释放内存时将空闲块加入ThreadFreeList，在加入ThreadFreeList时需要保证是线程安全的，因此Mimalloc使用了CAS来将空闲块加入ThreadFreeList中。Mimalloc在generic_allocation时将ThreadFreeList中的空闲区块加入FreeList中。</p>
+<h2 id="FreeList"><a href="#FreeList" class="headerlink" title="FreeList"></a>FreeList</h2><p>Mimalloc均从FreeList中取出空闲块，如果FreeList为空则进行generic_allocation，Mimalloc从一个页(准确的说是从一个包含小块的内存中)中分配内存的代码如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">extern</span> <span class="keyword">inline</span> <span class="keyword">void</span>* _mi_page_malloc(<span class="keyword">mi_heap_t</span>* heap, <span class="keyword">mi_page_t</span>* page, <span class="keyword">size_t</span> size) mi_attr_noexcept &#123;</span><br><span class="line">    mi_assert_internal(page-&gt;block_size==<span class="number">0</span>||page-&gt;block_size &gt;= size);</span><br><span class="line">    <span class="keyword">mi_block_t</span>* block = page-&gt;<span class="built_in">free</span>;</span><br><span class="line">    <span class="keyword">if</span> (mi_unlikely(block == <span class="literal">NULL</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span> _mi_malloc_generic(heap, size); <span class="comment">// slow path</span></span><br><span class="line">    &#125;</span><br><span class="line">    mi_assert_internal(block != <span class="literal">NULL</span> &amp;&amp; _mi_ptr_page(block) == page);</span><br><span class="line">    <span class="comment">// pop from the free list</span></span><br><span class="line">    page-&gt;<span class="built_in">free</span> = mi_block_next(page,block);</span><br><span class="line">    page-&gt;used++;</span><br><span class="line">    mi_assert_internal(page-&gt;<span class="built_in">free</span> == <span class="literal">NULL</span> || _mi_ptr_page(page-&gt;<span class="built_in">free</span>) == page);</span><br><span class="line">    <span class="meta">#<span class="meta-keyword">if</span> (MI_DEBUG)</span></span><br><span class="line">    <span class="built_in">memset</span>(block, MI_DEBUG_UNINIT, size);</span><br><span class="line">    <span class="meta">#<span class="meta-keyword">elif</span> (MI_SECURE)</span></span><br><span class="line">    block-&gt;next = <span class="number">0</span>;</span><br><span class="line">    <span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">    <span class="meta">#<span class="meta-keyword">if</span> (MI_STAT&gt;1)</span></span><br><span class="line">    <span class="keyword">if</span>(size &lt;= MI_LARGE_SIZE_MAX) mi_heap_stat_increase(heap,normal[_mi_bin(size)], <span class="number">1</span>);</span><br><span class="line">    <span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">    <span class="keyword">return</span> block;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Mimalloc主要的特点就是将FreeList进行分割，让每个Mimalloc page有多个FreeList，从而支持更好的并发，并且保证同一个Page分配出来的内存的局部性更好。</p>
 
       
     </div>
@@ -465,8 +466,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/10/25/内存管理/" rel="next" title="内存管理">
-                <i class="fa fa-chevron-left"></i> 内存管理
+              <a href="/2018/12/01/Dynamo/" rel="next" title="Dynamo">
+                <i class="fa fa-chevron-left"></i> Dynamo
               </a>
             
           </div>
@@ -474,10 +475,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/10/30/内存对齐/" rel="prev" title="内存对齐">
-                内存对齐 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -672,7 +669,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#死锁"><span class="nav-number">1.</span> <span class="nav-text">死锁</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#必要条件"><span class="nav-number">1.2.</span> <span class="nav-text">必要条件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理方法"><span class="nav-number">1.3.</span> <span class="nav-text">处理方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#鸵鸟策略"><span class="nav-number">1.3.1.</span> <span class="nav-text">鸵鸟策略</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#死锁检测与死锁恢复"><span class="nav-number">1.3.2.</span> <span class="nav-text">死锁检测与死锁恢复</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#死锁预防"><span class="nav-number">1.3.3.</span> <span class="nav-text">死锁预防</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#死锁避免"><span class="nav-number">1.3.4.</span> <span class="nav-text">死锁避免</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#MIMALLOC"><span class="nav-number">1.</span> <span class="nav-text">MIMALLOC</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结构"><span class="nav-number">2.</span> <span class="nav-text">结构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#LocalFreeList"><span class="nav-number">2.1.</span> <span class="nav-text">LocalFreeList</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ThreadFreeList"><span class="nav-number">2.2.</span> <span class="nav-text">ThreadFreeList</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#FreeList"><span class="nav-number">2.3.</span> <span class="nav-text">FreeList</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
             
 
           </div>
