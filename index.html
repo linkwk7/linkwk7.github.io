@@ -302,7 +302,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2019/07/04/mimalloc/">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2019/07/16/mimalloc/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Linkwk7">
@@ -321,7 +321,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2019/07/04/mimalloc/" itemprop="url">
+                <a class="post-title-link" href="/2019/07/16/mimalloc/" itemprop="url">
                   mimalloc
                 </a>
               
@@ -348,7 +348,7 @@
                 
               
 
-              <time title="Created: 2019-07-04 21:06:14 / Modified: 21:08:19" itemprop="dateCreated datePublished" datetime="2019-07-04T21:06:14+08:00">2019-07-04</time>
+              <time title="Created: 2019-07-16 17:14:47 / Modified: 17:19:29" itemprop="dateCreated datePublished" datetime="2019-07-16T17:14:47+08:00">2019-07-16</time>
             
 
             
@@ -412,11 +412,11 @@
 
       
         
-          <h1 id="MIMALLOC"><a href="#MIMALLOC" class="headerlink" title="MIMALLOC"></a>MIMALLOC</h1><p>allocator最开始的时候主要专注于加快内存分配的速度并减少内存消耗，或者支持更多并发的线程操作，而很少有设计专注于分配的内存的局部性上。而Mimalloc认为其在保证了分配的内存的局部性的前提下也可以有很好的性能以及并发可扩展性。那么为什么要让malloc分配的内存更具有局部性呢，这可以在一些函数式编程语言的分配模式中找到根据，因为在函数式编程语言中会分配和释放很多大小较小的对象，而那些为每类大小使用一个空闲块列表的allocator的空闲块的空间局部性会较差。为了保证内存分配的空间局部性，Mimalloc将空间块列表进行分片。其将堆分为多种大小的页，每个页中有一个空闲块列表，从而在分配某个大小的对象时会尽量从同一个页中进行分配，从而保证更好的空间局部性。</p>
-<p>Mimalloc在实现时并没有使用bump pointer来做初始的内存分配，因为其在加入bump pointer后需要在内存分配的调用中再多加上一次条件判断，其测试结果显示加上bump pointer导致了分配的速度下降了约2%，而且出于安全考虑，allocator不应该让每次内存分配的地址过于容易预测。</p>
+          <h1 id="mimalloc"><a href="#mimalloc" class="headerlink" title="mimalloc"></a>mimalloc</h1><p>mimalloc是微软最近开源的一个malloc实现，其实验数据表明相比于jemalloc、tcmalloc等实现大约快了10%。其通过将空闲块列表(Free List)进行分片(Sharding)来获取更好的分配的内存的局部性，从而提升性能。在mimalloc中一共进行了4次Free List的Sharding。接下来我们会分别介绍这4个Free List的Sharding的位置以及其为什么要进行Free List的Sharding。</p>
+<h2 id="在Mimalloc页中进行的Free-List的Sharding"><a href="#在Mimalloc页中进行的Free-List的Sharding" class="headerlink" title="在Mimalloc页中进行的Free List的Sharding"></a>在Mimalloc页中进行的Free List的Sharding</h2><p>在其他的内存分配器的实现中，一般会为每一类大小的对象保留一个Free List，随着内存的不断分配与释放，这个列表中的对象可能散布在整个地址空间中，因此内存分配的局部性较差。而在mimalloc中，其通过将内存分页，每个页负责一个特定大小的内存的分配，每个页有一个Free List，因此内存分配的空间局部性较好。</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2019/07/04/mimalloc/#more" rel="contents">
+            <a class="btn" href="/2019/07/16/mimalloc/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -2267,7 +2267,9 @@
                     
                       
                     
-                    <span class="site-state-item-count">13</span>
+                      
+                    
+                    <span class="site-state-item-count">14</span>
                     <span class="site-state-item-name">tags</span>
                   </a>
                 </div>

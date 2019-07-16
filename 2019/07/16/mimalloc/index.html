@@ -108,25 +108,28 @@
 
 
 
-  <meta name="description" content="IO模型简介一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：  阻塞式IO 非阻塞式IO IO复用(select/poll) 信号驱动式IO(SIGIO) 异步IO(AIO)">
-<meta name="keywords" content="Operating System">
+  <meta name="description" content="mimallocmimalloc是微软最近开源的一个malloc实现，其实验数据表明相比于jemalloc、tcmalloc等实现大约快了10%。其通过将空闲块列表(Free List)进行分片(Sharding)来获取更好的分配的内存的局部性，从而提升性能。在mimalloc中一共进行了4次Free List的Sharding。接下来我们会分别介绍这4个Free List的Sharding的位置">
+<meta name="keywords" content="Operating System,mimalloc">
 <meta property="og:type" content="article">
-<meta property="og:title" content="IO模型">
-<meta property="og:url" content="https://linkwk7.github.io/2018/10/30/IO模型/index.html">
+<meta property="og:title" content="mimalloc">
+<meta property="og:url" content="https://linkwk7.github.io/2019/07/16/mimalloc/index.html">
 <meta property="og:site_name" content="Linkwk7">
-<meta property="og:description" content="IO模型简介一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：  阻塞式IO 非阻塞式IO IO复用(select/poll) 信号驱动式IO(SIGIO) 异步IO(AIO)">
+<meta property="og:description" content="mimallocmimalloc是微软最近开源的一个malloc实现，其实验数据表明相比于jemalloc、tcmalloc等实现大约快了10%。其通过将空闲块列表(Free List)进行分片(Sharding)来获取更好的分配的内存的局部性，从而提升性能。在mimalloc中一共进行了4次Free List的Sharding。接下来我们会分别介绍这4个Free List的Sharding的位置">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2018-10-30T11:22:02.227Z">
+<meta property="og:image" content="https://linkwk7.github.io/2019/07/16/mimalloc/other_allocator_free_list.png">
+<meta property="og:image" content="https://linkwk7.github.io/2019/07/16/mimalloc/mimalloc_free_list.png">
+<meta property="og:updated_time" content="2019-07-16T09:19:29.807Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="IO模型">
-<meta name="twitter:description" content="IO模型简介一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：  阻塞式IO 非阻塞式IO IO复用(select/poll) 信号驱动式IO(SIGIO) 异步IO(AIO)">
+<meta name="twitter:title" content="mimalloc">
+<meta name="twitter:description" content="mimallocmimalloc是微软最近开源的一个malloc实现，其实验数据表明相比于jemalloc、tcmalloc等实现大约快了10%。其通过将空闲块列表(Free List)进行分片(Sharding)来获取更好的分配的内存的局部性，从而提升性能。在mimalloc中一共进行了4次Free List的Sharding。接下来我们会分别介绍这4个Free List的Sharding的位置">
+<meta name="twitter:image" content="https://linkwk7.github.io/2019/07/16/mimalloc/other_allocator_free_list.png">
 
 
 
 
 
 
-  <link rel="canonical" href="https://linkwk7.github.io/2018/10/30/IO模型/"/>
+  <link rel="canonical" href="https://linkwk7.github.io/2019/07/16/mimalloc/"/>
 
 
 
@@ -136,7 +139,7 @@
   };
 </script>
 
-  <title>IO模型 | Linkwk7</title>
+  <title>mimalloc | Linkwk7</title>
   
 
 
@@ -305,7 +308,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2018/10/30/IO模型/">
+    <link itemprop="mainEntityOfPage" href="https://linkwk7.github.io/2019/07/16/mimalloc/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Linkwk7">
@@ -322,7 +325,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">IO模型
+          <h1 class="post-title" itemprop="name headline">mimalloc
               
             
           </h1>
@@ -347,7 +350,7 @@
                 
               
 
-              <time title="Created: 2018-10-30 19:21:25 / Modified: 19:22:02" itemprop="dateCreated datePublished" datetime="2018-10-30T19:21:25+08:00">2018-10-30</time>
+              <time title="Created: 2019-07-16 17:14:47 / Modified: 17:19:29" itemprop="dateCreated datePublished" datetime="2019-07-16T17:14:47+08:00">2019-07-16</time>
             
 
             
@@ -418,23 +421,21 @@
       
 
       
-        <h1 id="IO模型"><a href="#IO模型" class="headerlink" title="IO模型"></a>IO模型</h1><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>一个IO输入操作通常包括两部分，一部分是等待数据准备好，另一部分是从内核向进程复制数据。Unix的IO模型有五种：</p>
-<ul>
-<li>阻塞式IO</li>
-<li>非阻塞式IO</li>
-<li>IO复用(select/poll)</li>
-<li>信号驱动式IO(SIGIO)</li>
-<li>异步IO(AIO)</li>
-</ul>
+        <h1 id="mimalloc"><a href="#mimalloc" class="headerlink" title="mimalloc"></a>mimalloc</h1><p>mimalloc是微软最近开源的一个malloc实现，其实验数据表明相比于jemalloc、tcmalloc等实现大约快了10%。其通过将空闲块列表(Free List)进行分片(Sharding)来获取更好的分配的内存的局部性，从而提升性能。在mimalloc中一共进行了4次Free List的Sharding。接下来我们会分别介绍这4个Free List的Sharding的位置以及其为什么要进行Free List的Sharding。</p>
+<h2 id="在Mimalloc页中进行的Free-List的Sharding"><a href="#在Mimalloc页中进行的Free-List的Sharding" class="headerlink" title="在Mimalloc页中进行的Free List的Sharding"></a>在Mimalloc页中进行的Free List的Sharding</h2><p>在其他的内存分配器的实现中，一般会为每一类大小的对象保留一个Free List，随着内存的不断分配与释放，这个列表中的对象可能散布在整个地址空间中，因此内存分配的局部性较差。而在mimalloc中，其通过将内存分页，每个页负责一个特定大小的内存的分配，每个页有一个Free List，因此内存分配的空间局部性较好。</p>
 <a id="more"></a>
-<h2 id="阻塞式"><a href="#阻塞式" class="headerlink" title="阻塞式"></a>阻塞式</h2><p>阻塞式IO表示对IO函数的调用需要等待整个IO完成才会返回，即仅当数据被复制到应用进程缓冲区后才会返回。例如使用read系统调用读取某个socket，如果不是立即接收到数据，服务器进程会被阻塞，之后一直等待用户数据到达，用户数据到达后会将数据写进内核缓冲区，之后将数据从内核缓冲区复制到用户进程缓冲区，完成了上述工作后才会将执行权限返回给用户(从内核态切换到用户态)</p>
-<p>由于阻塞式IO效率较低，如果用户数据一直没有到达则会导致整个服务器被阻塞(单进程/单线程)，因此为了不影响服务器接受其他进程的连接，可以考虑为每个连接的用户创建新线程，每次read系统调用仅会阻塞单个线程，不会影响服务器接受新的连接。在多线程模型下，主线程等待用户请求，用户请求到达后会创建新的线程，新线程负责随后于用户的交互，但由于新的线程也会占用较多系统资源，且线程较多后调度开销也会增大，因此并不适合高并发的场景。</p>
-<h2 id="非阻塞式IO"><a href="#非阻塞式IO" class="headerlink" title="非阻塞式IO"></a>非阻塞式IO</h2><p>非阻塞式IO会在调用后立刻返回，调用者通过对返回值的判断确定该次调用是否完成了IO。应用进程为了获知是否有数据到达需要不断的执行系统调用来确定IO是否完成，这种查询方式称为轮询。由于利用这种方式需要操作系统处理更多的系统调用，因此CPU利用率较低。</p>
-<h2 id="IO复用"><a href="#IO复用" class="headerlink" title="IO复用"></a>IO复用</h2><p>使用select/poll等待数据，并等待多个套接字中的任何一个变为可读，这一过程会被阻塞，当一个套接字可读后该函数才会返回，之后可以使用read等系统调用从套接字中读取数据。这种方式可以让单个进程拥有处理多个IO时间的能力，因此又被称为事件驱动IO。如果一个web服务器没有使用IO复用而是使用多线程模型，则每个套接字需要一个单独的线程去处理，因此相比之下，IO复用不需要进程创建和切换的开销，因此系统开销更小。</p>
-<h2 id="信号驱动式IO"><a href="#信号驱动式IO" class="headerlink" title="信号驱动式IO"></a>信号驱动式IO</h2><p>应用进程使用sigaction发出信号，内核立刻返回，应用进程继续执行，而内核在有数据到达时向进程发送SIGIO信号，应用进程在收到信号的信号处理函数中调用read等函数读取数据。</p>
-<h2 id="异步IO"><a href="#异步IO" class="headerlink" title="异步IO"></a>异步IO</h2><p>应用进程调用aio_read系统调用后立刻返回，应用进程可以继续执行，内核会在操作完成后向应用进程发送信号表示传输已经完成。异步IO与信号驱动式IO的区别就是异步IO的信号是用来通知应用进程IO已经完成的，而信号驱动IO中的信号是用来通知应用进程已有数据到达可以开始IO的。</p>
-<h2 id="五种信号模型区别"><a href="#五种信号模型区别" class="headerlink" title="五种信号模型区别"></a>五种信号模型区别</h2><p>可以将这五种模型分为同步与异步两类，同步IO指将数据从内核缓冲区复制到应用进程缓冲区的过程会阻塞，同步IO包括阻塞式IO、非阻塞式IO、IO复用、信号驱动式IO；异步IO则完成不会阻塞，该类包括异步IO。同步IO中仅阻塞IO会在等待数据的过程中阻塞，其他三种方式不会阻塞。</p>
-<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://github.com/CyC2018/CS-Notes/blob/master/notes/Socket.md" target="_blank" rel="noopener">https://github.com/CyC2018/CS-Notes/blob/master/notes/Socket.md</a><br><a href="https://blog.csdn.net/davidsguo008/article/details/73556811" target="_blank" rel="noopener">https://blog.csdn.net/davidsguo008/article/details/73556811</a></p>
+<center><br><br><img src="/2019/07/16/mimalloc/other_allocator_free_list.png" alt="其他内存分配器的Free List"><br>其他内存分配器的Free List<br><br><img src="/2019/07/16/mimalloc/mimalloc_free_list.png" alt="mimalloc的Free List"><br>mimalloc的Free List<br><br></center>
+
+<h2 id="Local-Free-List"><a href="#Local-Free-List" class="headerlink" title="Local Free List"></a>Local Free List</h2><p>mimalloc希望能够限制内存分配与内存释放在最差情况下的时间消耗，如果上层应用需要释放一个非常大的结构体，其可能需要递归的释放一些子结构体，因而可能带来非常大的时间消耗。因而在koka与lean语言中，其运行时系统使用引用计数来追踪各种数据，然后保留一个延迟释放的队列(deferred decrement list)，当每次释放的内存块超过一定数量后就将剩余需要释放的内存块加入该队列，在之后需要释放的时候再进行释放。那么下一个需要确定的问题是什么时候再去从该队列中释放内存。从延迟释放队列中继续进行释放的时机最好应当是内存分配器需要更多空间的时候，因此这需要内存分配器与上层应用的协作。</p>
+<p>在mimalloc中，其提供一个回调函数，当进行了一定次数内存的分配与释放后会主动调用该回调函数来通知上层应用。mimalloc在实现时检测当前进行内存分配的页的Free List是否为空，如果为空则调用该回调，但是为了避免用于一直不断的分配与释放内存，导致Free List一直不为空，而导致回调函数一直得不到回调。因此mimalloc将Free List第二次进行Sharding，将其分为Free List与Local Free List。</p>
+<p>当内存在进行分配时会从对应页的Free List中取得内存块，而释放时会将内存块加入Local Free List中，因而在进行一定次数的内存分配后，Free List必定为空，此时可以进行deferred free的回调函数的调用。</p>
+<h2 id="Thread-Free-List"><a href="#Thread-Free-List" class="headerlink" title="Thread Free List"></a>Thread Free List</h2><p>在mimalloc中每个堆都是一个Thread Local的变量，而每次进行内存分配时，其均会从这个Thread Local的堆中进行内存的分配，而释放时即可能从该线程中释放也可能从其他线程中进行释放。如果进行内存释放的线程是该堆的拥有者，则其释放的内存会加入到对应页的Local Free List中，而由于还可能有其他的线程来释放这些内存，因此mimalloc第三次进行Free List的Sharding，将Local Free List分为Local Free List与Thread Free List。在进行内存的释放时，如果释放的线程为内存块对应堆的拥有着则将其加入Local Free List，否则利用CAS操作将其加入Thread Free List中。mimalloc通过这次分割来保证堆的所有者线程在自己的堆上进行内存的释放是无锁的，从而提升一些性能上的表现。</p>
+<h2 id="Full-List"><a href="#Full-List" class="headerlink" title="Full List"></a>Full List</h2><p>第四次的Free List的Sharding其实来自于mimalloc自身的实现，其内存分配的伪代码如下。由于在mimalloc中每个堆中都有一个数组pages，该数组中每个元素都是一个由相应大小的页组成的队列；同时还有一个pages_direct的数组，该数组中每个元素对应一个内存块的大小类型，每个元素均为指向负责对应大小内存块分配的页的指针。因此mimalloc在进行内存分配时会首先从该数组指向的页中尝试进行分配，如果分配失败则调用malloc_generic，在该函数中会遍历pages数组中对应大小的队列，此时如果对应的队列中有很多页均是满的，且队列很长那么每次分配的时候都会进行队列的遍历，导致性能的损失。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">malloc_small</span><span class="params">( <span class="keyword">size_t</span> n )</span> </span>&#123;</span><br><span class="line">  <span class="keyword">heap_t</span>* heap = tlb;</span><br><span class="line">  <span class="keyword">page_t</span>* page = heap-&gt;pages_direct[(n+<span class="number">7</span>)&gt;&gt;<span class="number">3</span>];</span><br><span class="line">  <span class="keyword">block_t</span>* block = page-&gt;<span class="built_in">free</span>;</span><br><span class="line">  <span class="keyword">if</span> (block==<span class="literal">NULL</span>) <span class="keyword">return</span> malloc_generic(heap,n);</span><br><span class="line">  page-&gt;<span class="built_in">free</span> = block-&gt;next;</span><br><span class="line">  page-&gt;used++;</span><br><span class="line">  <span class="keyword">return</span> block;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因此mimalloc构建了一个Full List，将所有已经没有空闲空间的页放入该队列中，仅当该页中有一些空闲空间被释放后才会将其放回pages对应的队列中。而在由于内存的释放可能由对应堆的拥有者线程进行也可能由其他线程进行，因此需要一定的方式提醒对应的堆该页已经有空闲块了，同时为了避免使用锁导致的开销，mimalloc通过加入一个Thread Delayed Free List，如果一个页处于Full List中，那么在释放时会将内存块加入Thread Delayed Free List中，该队列会在调用malloc_generic时进行检测与清除(由于时Thread Local的堆，因此仅可能是拥有者来进行)，因此此时仅需通过原子操作即可完成。那么还有一个问题是当释放内存的时候，其他线程如何知道是将内存块加入Thread Free List中还是Thread Delayed Free List中。mimalloc通过设置NORMAL、DELAYED、DELAYING三种状态来完成该操作。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>mimalloc通过将Free List进行分割，保证分配的内存具有较好的局部性并避免了锁的使用，从而获得了更好的性能。文章如果有哪里有问题，欢迎提出，对该项目感兴趣的可以去看一下其仓库<sup>1</sup>，或者参考这篇文章<sup>2</sup>。</p>
+<h1 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h1><p>[1] <a href="https://github.com/microsoft/mimalloc" target="_blank" rel="noopener">https://github.com/microsoft/mimalloc</a></p>
+<p>[2] <a href="https://www.microsoft.com/en-us/research/publication/mimalloc-free-list-sharding-in-action/" target="_blank" rel="noopener">https://www.microsoft.com/en-us/research/publication/mimalloc-free-list-sharding-in-action/</a></p>
 
       
     </div>
@@ -457,6 +458,8 @@
           
             <a href="/tags/Operating-System/" rel="tag"># Operating System</a>
           
+            <a href="/tags/mimalloc/" rel="tag"># mimalloc</a>
+          
         </div>
       
 
@@ -468,8 +471,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/10/30/内存对齐/" rel="next" title="内存对齐">
-                <i class="fa fa-chevron-left"></i> 内存对齐
+              <a href="/2018/12/01/Dynamo/" rel="next" title="Dynamo">
+                <i class="fa fa-chevron-left"></i> Dynamo
               </a>
             
           </div>
@@ -477,10 +480,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/11/04/网络知识点总结/" rel="prev" title="网络知识点总结">
-                网络知识点总结 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -677,7 +676,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#IO模型"><span class="nav-number">1.</span> <span class="nav-text">IO模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#阻塞式"><span class="nav-number">1.2.</span> <span class="nav-text">阻塞式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#非阻塞式IO"><span class="nav-number">1.3.</span> <span class="nav-text">非阻塞式IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#IO复用"><span class="nav-number">1.4.</span> <span class="nav-text">IO复用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#信号驱动式IO"><span class="nav-number">1.5.</span> <span class="nav-text">信号驱动式IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#异步IO"><span class="nav-number">1.6.</span> <span class="nav-text">异步IO</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#五种信号模型区别"><span class="nav-number">1.7.</span> <span class="nav-text">五种信号模型区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考"><span class="nav-number">1.8.</span> <span class="nav-text">参考</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mimalloc"><span class="nav-number">1.</span> <span class="nav-text">mimalloc</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#在Mimalloc页中进行的Free-List的Sharding"><span class="nav-number">1.1.</span> <span class="nav-text">在Mimalloc页中进行的Free List的Sharding</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Local-Free-List"><span class="nav-number">1.2.</span> <span class="nav-text">Local Free List</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Thread-Free-List"><span class="nav-number">1.3.</span> <span class="nav-text">Thread Free List</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Full-List"><span class="nav-number">1.4.</span> <span class="nav-text">Full List</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">2.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#引用"><span class="nav-number">3.</span> <span class="nav-text">引用</span></a></li></ol></div>
             
 
           </div>
